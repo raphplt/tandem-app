@@ -1,8 +1,9 @@
-import { CustomIntlayerProvider } from "@/components/intlayer-provider";
 import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider";
 import "@/global.css";
 import { useColorScheme } from "@/hooks/use-color-scheme";
+import { useLinguiLocale } from "@/hooks/use-lingui-locale";
 import { useThemeStore } from "@/hooks/use-theme-store";
+import { I18nProvider, i18n } from "@/src/i18n";
 import {
 	DarkTheme,
 	DefaultTheme,
@@ -20,6 +21,9 @@ export default function RootLayout() {
 	const colorScheme = useColorScheme();
 	const { mode } = useThemeStore();
 
+	// Initialize LinguiJS locale management
+	useLinguiLocale();
+
 	const getActualThemeMode = () => {
 		if (mode === "system") {
 			return colorScheme === "dark" ? "dark" : "light";
@@ -32,7 +36,7 @@ export default function RootLayout() {
 	return (
 		<GluestackUIProvider mode={actualThemeMode}>
 			<ThemeProvider value={actualThemeMode === "dark" ? DarkTheme : DefaultTheme}>
-				<CustomIntlayerProvider>
+				<I18nProvider i18n={i18n}>
 					<Stack>
 						<Stack.Screen name="(tabs)" options={{ headerShown: false }} />
 						<Stack.Screen
@@ -40,7 +44,7 @@ export default function RootLayout() {
 							options={{ presentation: "modal", title: "Modal" }}
 						/>
 					</Stack>
-				</CustomIntlayerProvider>
+				</I18nProvider>
 				<StatusBar style="auto" />
 			</ThemeProvider>
 		</GluestackUIProvider>

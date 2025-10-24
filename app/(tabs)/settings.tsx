@@ -1,13 +1,9 @@
 import { useLocale } from "@/hooks/use-locale";
 import { useThemeStore, type ThemeMode } from "@/hooks/use-theme-store";
-import { Locales } from "intlayer";
-import { useIntlayer } from "react-intlayer";
+import { Trans } from "@lingui/macro";
 import { Text, TouchableOpacity, View } from "react-native";
 
 export default function SettingsScreen() {
-	const { title, language, theme, light, dark, system, english, french } =
-		useIntlayer("settings-screen");
-
 	const { mode, setMode } = useThemeStore();
 	const { locale, changeLocale } = useLocale();
 
@@ -15,31 +11,43 @@ export default function SettingsScreen() {
 		setMode(newMode);
 	};
 
-	const handleLocaleChange = (newLocale: Locales.ENGLISH | Locales.FRENCH) => {
+	const handleLocaleChange = (newLocale: "en" | "fr") => {
 		changeLocale(newLocale);
 	};
 
 	const themeOptions = [
-		{ value: "light" as ThemeMode, label: light },
-		{ value: "dark" as ThemeMode, label: dark },
-		{ value: "system" as ThemeMode, label: system },
+		{
+			value: "light" as ThemeMode,
+			label: <Trans id="settings-screen.light">Light</Trans>,
+		},
+		{
+			value: "dark" as ThemeMode,
+			label: <Trans id="settings-screen.dark">Dark</Trans>,
+		},
+		{
+			value: "system" as ThemeMode,
+			label: <Trans id="settings-screen.system">System</Trans>,
+		},
 	];
 
-	const localeOptions = [
-		{ value: Locales.ENGLISH, label: english },
-		{ value: Locales.FRENCH, label: french },
+	const localeOptions: {
+		value: "en" | "fr";
+		label: React.ReactNode;
+	}[] = [
+		{ value: "en", label: <Trans id="settings-screen.english">English</Trans> },
+		{ value: "fr", label: <Trans id="settings-screen.french">French</Trans> },
 	];
 
 	return (
 		<View className="flex-1 bg-white dark:bg-gray-900 p-6">
 			<Text className="text-3xl font-bold text-gray-900 dark:text-white mb-8">
-				{title}
+				<Trans id="settings-screen.title">Settings</Trans>
 			</Text>
 
 			{/* Language Section */}
 			<View className="mb-8">
 				<Text className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4">
-					{language}
+					<Trans id="settings-screen.language">Language</Trans>
 				</Text>
 				<View className="space-y-2">
 					{localeOptions.map((option) => (
@@ -69,7 +77,7 @@ export default function SettingsScreen() {
 			{/* Theme Section */}
 			<View>
 				<Text className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4">
-					{theme}
+					<Trans id="settings-screen.theme">Theme</Trans>
 				</Text>
 				<View className="space-y-2">
 					{themeOptions.map((option) => (

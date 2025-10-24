@@ -1,9 +1,8 @@
 import { storage } from "@/storage";
-import { Locales } from "intlayer";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-export type LocaleType = Locales.ENGLISH | Locales.FRENCH;
+export type LocaleType = "en" | "fr";
 
 interface LocaleStore {
 	locale: LocaleType;
@@ -13,7 +12,7 @@ interface LocaleStore {
 export const useLocaleStore = create<LocaleStore>()(
 	persist(
 		(set) => ({
-			locale: Locales.FRENCH,
+			locale: "fr",
 			setLocale: (locale) => set({ locale }),
 		}),
 		{

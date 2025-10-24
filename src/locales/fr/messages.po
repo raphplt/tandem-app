@@ -1,0 +1,40 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=utf-8\n"
+"Language: fr\n"
+
+msgid "home-screen.title"
+msgstr "Bienvenue !"
+
+msgid "settings-screen.title"
+msgstr "Paramètres"
+
+msgid "settings-screen.language"
+msgstr "Langue"
+
+msgid "settings-screen.theme"
+msgstr "Thème"
+
+msgid "settings-screen.light"
+msgstr "Clair"
+
+msgid "settings-screen.dark"
+msgstr "Sombre"
+
+msgid "settings-screen.system"
+msgstr "Système"
+
+msgid "settings-screen.english"
+msgstr "Anglais"
+
+msgid "settings-screen.french"
+msgstr "Français"
+
+msgid "tabs.home"
+msgstr "Accueil"
+
+msgid "tabs.explore"
+msgstr "Explorer"
+
+msgid "tabs.settings"
+msgstr "Paramètres"

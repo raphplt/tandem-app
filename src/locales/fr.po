@@ -1,0 +1,68 @@
+msgid ""
+msgstr ""
+"POT-Creation-Date: 2025-10-24 16:37+0200\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: @lingui/cli\n"
+"Language: fr\n"
+
+#. js-lingui-explicit-id
+#: app/(tabs)/settings.tsx:20
+msgid "settings-screen.dark"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: app/(tabs)/settings.tsx:28
+msgid "settings-screen.english"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: app/(tabs)/_layout.tsx:42
+msgid "tabs.explore"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: app/(tabs)/settings.tsx:29
+msgid "settings-screen.french"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: app/(tabs)/_layout.tsx:35
+msgid "tabs.home"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: app/(tabs)/settings.tsx:41
+msgid "settings-screen.language"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: app/(tabs)/settings.tsx:19
+msgid "settings-screen.light"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: app/(tabs)/settings.tsx:35
+msgid "settings-screen.title"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: app/(tabs)/_layout.tsx:49
+msgid "tabs.settings"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: app/(tabs)/settings.tsx:21
+msgid "settings-screen.system"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: app/(tabs)/settings.tsx:71
+msgid "settings-screen.theme"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: app/(tabs)/index.tsx:8
+msgid "home-screen.title"
+msgstr ""
