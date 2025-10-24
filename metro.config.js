@@ -1,6 +1,10 @@
 const { getDefaultConfig } = require("expo/metro-config");
 const { withNativeWind } = require("nativewind/metro");
+const { configMetroIntlayer } = require("react-native-intlayer/metro");
 
-const config = getDefaultConfig(__dirname);
+module.exports = (async () => {
+	const defaultConfig = getDefaultConfig(__dirname);
+	const intlayerConfig = await configMetroIntlayer(defaultConfig);
 
-module.exports = withNativeWind(config, { input: "./global.css" });
+	return withNativeWind(intlayerConfig, { input: "./global.css" });
+})();
