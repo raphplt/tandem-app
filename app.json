@@ -46,6 +46,13 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "aee6869c-2965-4842-a748-7720f87675eb"
+      }
+    },
+    "owner": "raphplt"
   }
 }
