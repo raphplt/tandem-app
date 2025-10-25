@@ -1,9 +1,9 @@
+import { I18nProvider, i18n } from "@/src/i18n";
 import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider";
 import "@/global.css";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useLinguiLocale } from "@/hooks/use-lingui-locale";
 import { useThemeStore } from "@/hooks/use-theme-store";
-import { I18nProvider, i18n } from "@/src/i18n";
 import {
 	DarkTheme,
 	DefaultTheme,
@@ -12,16 +12,16 @@ import {
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
+import "react-native-svg";
 
-// export const unstable_settings = {
-// 	anchor: "(tabs)",
-// };
+export const unstable_settings = {
+	anchor: "(tabs)",
+};
 
 export default function RootLayout() {
 	const colorScheme = useColorScheme();
 	const { mode } = useThemeStore();
 
-	// Initialize LinguiJS locale management
 	useLinguiLocale();
 
 	const getActualThemeMode = () => {

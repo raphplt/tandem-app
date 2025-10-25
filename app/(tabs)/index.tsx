@@ -7,6 +7,7 @@ export default function HomeScreen() {
 			<Text className="text-3xl font-bold text-blue-500">
 				<Trans id="home-screen.title">Welcome!</Trans>
 			</Text>
+
 		</View>
 	);
 }

@@ -5,7 +5,6 @@ export const useLocale = () => {
 
 	const changeLocale = (newLocale: "en" | "fr") => {
 		setLocale(newLocale);
-		// No need to reload the page with LinguiJS
 	};
 
 	return {

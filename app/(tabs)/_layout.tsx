@@ -4,7 +4,8 @@ import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useThemeStore } from "@/hooks/use-theme-store";
 import { Trans } from "@lingui/macro";
 import { Tabs } from "expo-router";
-import { GearIcon, House, PaperPlane } from "phosphor-react-native";
+import { AirplaneTilt, GearIcon, HouseIcon } from "phosphor-react-native";
+
 import React from "react";
 import { Text } from "react-native";
 
@@ -37,7 +38,7 @@ export default function TabLayout() {
 							<Trans id="tabs.home">Home</Trans>
 						</Text>
 					),
-					tabBarIcon: ({ color }) => <House size={28} color={color} />,
+					tabBarIcon: ({ color }) => <HouseIcon size={28} color={color} />,
 				}}
 			/>
 			<Tabs.Screen
@@ -48,7 +49,7 @@ export default function TabLayout() {
 							<Trans id="tabs.explore">Explore</Trans>
 						</Text>
 					),
-					tabBarIcon: ({ color }) => <PaperPlane size={28} color={color} />,
+					tabBarIcon: ({ color }) => <AirplaneTilt size={28} color={color} />,
 				}}
 			/>
 			<Tabs.Screen

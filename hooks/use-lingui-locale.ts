@@ -1,22 +1,19 @@
-import { useLocaleStore } from "@/hooks/use-locale-store";
 import { i18n } from "@lingui/core";
 import { useEffect } from "react";
+import { useLocaleStore } from "./use-locale-store";
 
 export const useLinguiLocale = () => {
 	const { locale } = useLocaleStore();
 
 	useEffect(() => {
-		// Load and activate the locale when it changes
 		const loadMessages = async () => {
 			try {
 				if (locale === "fr") {
-					const { messages } = await import("../locales/fr");
-					i18n.load("fr", messages);
-					i18n.activate("fr");
+					const { messages } = await import("../src/locales/fr");
+					i18n.loadAndActivate({ locale: "fr", messages });
 				} else {
-					const { messages } = await import("../locales/en");
-					i18n.load("en", messages);
-					i18n.activate("en");
+					const { messages } = await import("../src/locales/en");
+					i18n.loadAndActivate({ locale: "en", messages });
 				}
 			} catch (error) {
 				console.error("Failed to load locale messages:", error);

@@ -1,7 +1,13 @@
 const { getDefaultConfig } = require("expo/metro-config");
 const { withNativeWind } = require("nativewind/metro");
+const path = require("path");
 
-module.exports = (async () => {
-	const defaultConfig = getDefaultConfig(__dirname);
-	return withNativeWind(defaultConfig, { input: "./global.css" });
-})();
+const config = getDefaultConfig(__dirname);
+
+// Add alias configuration
+config.resolver.alias = {
+	"@": path.resolve(__dirname, "./"),
+	"@/locales": path.resolve(__dirname, "./src/locales"),
+};
+
+module.exports = withNativeWind(config, { input: "./global.css" });
