@@ -1,4 +1,4 @@
-import { Trans } from "@lingui/macro";
+import { Trans } from "@lingui/react/macro";
 import { Text, View } from "react-native";
 
 export default function HomeScreen() {
@@ -7,7 +7,6 @@ export default function HomeScreen() {
 			<Text className="text-3xl font-bold text-blue-500">
 				<Trans id="home-screen.title">Welcome!</Trans>
 			</Text>
-
 		</View>
 	);
 }

@@ -2,7 +2,7 @@ import { HapticTab } from "@/components/haptic-tab";
 import { Colors } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useThemeStore } from "@/hooks/use-theme-store";
-import { Trans } from "@lingui/macro";
+import { Trans } from "@lingui/react/macro";
 import { Tabs } from "expo-router";
 import { AirplaneTilt, GearIcon, HouseIcon } from "phosphor-react-native";
 

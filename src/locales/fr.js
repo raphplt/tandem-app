@@ -1,1 +1,16 @@
-/*eslint-disable*/module.exports={messages:JSON.parse("{\"home-screen.title\":[\"Welcome!\"],\"settings-screen.dark\":[\"Dark\"],\"settings-screen.english\":[\"English\"],\"settings-screen.french\":[\"French\"],\"settings-screen.language\":[\"Language\"],\"settings-screen.light\":[\"Light\"],\"settings-screen.system\":[\"System\"],\"settings-screen.theme\":[\"Theme\"],\"settings-screen.title\":[\"Settings\"],\"tabs.explore\":[\"Explore\"],\"tabs.home\":[\"Home\"],\"tabs.settings\":[\"Settings\"]}")};
+module.exports = {
+	messages: {
+		"home-screen.title": ["Bienvenue !"],
+		"settings-screen.dark": ["Sombre"],
+		"settings-screen.english": ["Anglais"],
+		"settings-screen.french": ["Français"],
+		"settings-screen.language": ["Langue"],
+		"settings-screen.light": ["Clair"],
+		"settings-screen.system": ["Système"],
+		"settings-screen.theme": ["Thème"],
+		"settings-screen.title": ["Paramètres"],
+		"tabs.explore": ["Explorer"],
+		"tabs.home": ["Accueil"],
+		"tabs.settings": ["Paramètres"],
+	},
+};
