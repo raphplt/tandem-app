@@ -1,9 +1,10 @@
-import { I18nProvider, i18n } from "@/src/i18n";
 import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider";
 import "@/global.css";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useLinguiLocale } from "@/hooks/use-lingui-locale";
 import { useThemeStore } from "@/hooks/use-theme-store";
+import { I18nProvider, i18n } from "@/src/i18n";
+import { AuthProvider } from "@/src/providers/auth-provider";
 import {
 	DarkTheme,
 	DefaultTheme,
@@ -37,13 +38,16 @@ export default function RootLayout() {
 		<GluestackUIProvider mode={actualThemeMode}>
 			<ThemeProvider value={actualThemeMode === "dark" ? DarkTheme : DefaultTheme}>
 				<I18nProvider i18n={i18n}>
-					<Stack>
-						<Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-						<Stack.Screen
-							name="modal"
-							options={{ presentation: "modal", title: "Modal" }}
-						/>
-					</Stack>
+					<AuthProvider>
+						<Stack>
+							<Stack.Screen name="(auth)" options={{ headerShown: false }} />
+							<Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+							<Stack.Screen
+								name="modal"
+								options={{ presentation: "modal", title: "Modal" }}
+							/>
+						</Stack>
+					</AuthProvider>
 				</I18nProvider>
 				<StatusBar style="auto" />
 			</ThemeProvider>

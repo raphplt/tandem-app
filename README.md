@@ -42,6 +42,16 @@ To learn more about developing your project with Expo, look at the following res
 - [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
 - [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
 
+## Authentication setup
+
+The app expects a Better Auth backend reachable at `EXPO_PUBLIC_AUTH_BASE_URL` (falls back to `http://localhost:3333/api/auth`). Update your `.env` file or `app.json` extras to point to the NestJS API described in `docs/auth-backend.md`.
+
+```
+EXPO_PUBLIC_AUTH_BASE_URL=https://your-api.example.com/api/auth
+EXPO_PUBLIC_AUTH_STORAGE_PREFIX=tandem
+EXPO_PUBLIC_APP_SCHEME=tandem
+```
+
 ## Join the community
 
 Join our community of developers creating universal apps.

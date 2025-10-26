@@ -1,17 +1,20 @@
 import { HapticTab } from "@/components/haptic-tab";
 import { Colors } from "@/constants/theme";
+import { useAuthSession } from "@/hooks/use-auth-session";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useThemeStore } from "@/hooks/use-theme-store";
 import { Trans } from "@lingui/react/macro";
-import { Tabs } from "expo-router";
+import { Href, Redirect, Tabs } from "expo-router";
 import { AirplaneTilt, GearIcon, HouseIcon } from "phosphor-react-native";
 
 import React from "react";
-import { Text } from "react-native";
+import { ActivityIndicator, Text, View } from "react-native";
 
 export default function TabLayout() {
 	const colorScheme = useColorScheme();
 	const { mode } = useThemeStore();
+	const { data: session, isLoading, isRefetching } = useAuthSession();
+	const signInHref = "/(auth)/sign-in" as Href;
 
 	const getActualThemeMode = () => {
 		if (mode === "system") {
@@ -21,6 +24,18 @@ export default function TabLayout() {
 	};
 
 	const actualThemeMode = getActualThemeMode();
+
+	if (isLoading || isRefetching) {
+		return (
+			<View className="flex-1 items-center justify-center bg-white dark:bg-black">
+				<ActivityIndicator size="large" />
+			</View>
+		);
+	}
+
+	if (!session) {
+		return <Redirect href={signInHref} />;
+	}
 
 	return (
 		<Tabs
