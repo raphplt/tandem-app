@@ -6,6 +6,9 @@ import { env } from "@/src/config/env";
 
 export const authClient = createAuthClient({
 	baseURL: env.authBaseURL,
+	fetchOptions: {
+		credentials: "include",
+	},
 	plugins: [
 		expoClient({
 			storage: SecureStore,

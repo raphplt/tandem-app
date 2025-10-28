@@ -1,15 +1,16 @@
+import { env } from "@/src/config/env";
+import { authClient } from "@/src/lib/auth/client";
+import * as SecureStore from "expo-secure-store";
 import {
 	createContext,
 	useCallback,
 	useContext,
 	useEffect,
 	useMemo,
+	useRef,
 	useState,
 	type ReactNode,
 } from "react";
-
-import { authClient } from "@/src/lib/auth/client";
-import { extractErrorMessage } from "@/src/utils/error";
 
 export type AuthResponse = {
 	token?: string;
@@ -39,6 +40,8 @@ type AuthContextValue = AuthState & {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
+const SESSION_STORAGE_KEY = `${env.authStoragePrefix}_session_state`;
+
 export function AuthProvider({ children }: { children: ReactNode }) {
 	const [state, setState] = useState<AuthState>({
 		data: null,
@@ -46,27 +49,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 		isRefetching: false,
 		error: null,
 	});
+	const mountedRef = useRef(true);
 
-	const setSession = useCallback((session: AuthResponse | null) => {
-		setState({
-			data: session,
-			isLoading: false,
-			isRefetching: false,
-			error: null,
-		});
+	useEffect(() => () => {
+		mountedRef.current = false;
 	}, []);
 
-	const clearSession = useCallback(() => {
-		setState({
-			data: null,
-			isLoading: false,
-			isRefetching: false,
-			error: null,
-		});
-	}, []);
+	const safeSetState = useCallback(
+		(updater: AuthState | ((prev: AuthState) => AuthState)) => {
+			if (!mountedRef.current) return;
+			setState((prev) => (typeof updater === "function" ? (updater as any)(prev) : updater));
+		},
+		[]
+	);
 
 	const refetch = useCallback(async () => {
-		setState((prev) => ({
+		safeSetState((prev) => ({
 			data: prev.data,
 			isLoading: prev.data === null,
 			isRefetching: prev.data !== null,
@@ -74,53 +72,62 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 		}));
 
 		try {
-			const result = await authClient.$fetch("/profile", {
-				method: "GET",
-			});
-
-			if (result?.error) {
-				const status =
-					(result.error as { status?: number; statusCode?: number }).status ??
-					(result.error as { status?: number; statusCode?: number }).statusCode;
-				const message = status === 401 ? null : extractErrorMessage(result.error);
-				setState({
-					data: null,
-					isLoading: false,
-					isRefetching: false,
-					error: message,
-				});
-				return;
+			const result = await authClient.$fetch("/profile", { method: "GET" });
+			if (result.error) {
+				safeSetState({ data: null, isLoading: false, isRefetching: false, error: null });
+				await SecureStore.deleteItemAsync(SESSION_STORAGE_KEY);
+			} else if (result.data) {
+				const sessionData = result.data as AuthResponse;
+				safeSetState({ data: sessionData, isLoading: false, isRefetching: false, error: null });
+				await SecureStore.setItemAsync(SESSION_STORAGE_KEY, JSON.stringify(sessionData));
 			}
-
-			const payload = (result?.data ?? null) as AuthResponse | null;
-
-			setState({
-				data: payload,
-				isLoading: false,
-				isRefetching: false,
-				error: null,
-			});
-		} catch (error) {
-			setState({
-				data: null,
-				isLoading: false,
-				isRefetching: false,
-				error: extractErrorMessage(error),
-			});
+		} catch (e) {
+			safeSetState((prev) => ({ ...prev, isLoading: false, isRefetching: false }));
 		}
-	}, []);
+	}, [safeSetState]);
 
+	// restore persisted snapshot then validate against backend
 	useEffect(() => {
-		refetch();
+		let active = true;
+		(async () => {
+			try {
+				const stored = await SecureStore.getItemAsync(SESSION_STORAGE_KEY);
+				if (stored && active) {
+					safeSetState({ data: JSON.parse(stored), isLoading: false, isRefetching: false, error: null });
+				}
+			} finally {
+				if (active) await refetch();
+			}
+		})();
+		return () => {
+			active = false;
+		};
+	}, [refetch, safeSetState]);
+
+	// Listen to Better Auth cookie changes to refetch session
+	useEffect(() => {
+		const unsubscribe = authClient.$store.listen("$sessionSignal", () => {
+			void refetch();
+		}) as (() => void) | void;
+		return () => unsubscribe?.();
 	}, [refetch]);
 
+	const setSession = useCallback(async (session: AuthResponse | null) => {
+		if (session) {
+			await SecureStore.setItemAsync(SESSION_STORAGE_KEY, JSON.stringify(session));
+		} else {
+			await SecureStore.deleteItemAsync(SESSION_STORAGE_KEY);
+		}
+		safeSetState({ data: session, isLoading: false, isRefetching: false, error: null });
+	}, [safeSetState]);
+
+	const clearSession = useCallback(async () => {
+		await SecureStore.deleteItemAsync(SESSION_STORAGE_KEY);
+		safeSetState({ data: null, isLoading: false, isRefetching: false, error: null });
+	}, [safeSetState]);
+
 	const value = useMemo<AuthContextValue>(
-		() => ({
-			...state,
-			refetch,
-			setSession,
-			clearSession,
-		}),
+		() => ({ ...state, refetch, setSession, clearSession }),
 		[state, refetch, setSession, clearSession]
 	);
 
@@ -129,10 +136,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export function useAuthContext() {
 	const context = useContext(AuthContext);
-
-	if (!context) {
-		throw new Error("useAuthContext must be used within an AuthProvider");
-	}
-
+	if (!context) throw new Error("useAuthContext must be used within an AuthProvider");
 	return context;
 }

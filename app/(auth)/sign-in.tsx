@@ -13,6 +13,7 @@ import {
 import { useAuthActions } from "@/hooks/use-auth-actions";
 import { useAuthSession } from "@/hooks/use-auth-session";
 import { extractErrorMessage } from "@/src/utils/error";
+import { HorseIcon } from "phosphor-react-native";
 
 type ErrorState =
 	| { kind: "key"; key: "missing-credentials" }
@@ -64,6 +65,7 @@ export default function SignInScreen() {
 			className="flex-1 bg-white dark:bg-black"
 		>
 			<View className="flex-1 justify-center px-6">
+				<HorseIcon />
 				<Text className="text-4xl font-bold text-zinc-900 dark:text-zinc-100 mb-8">
 					<Trans id="auth.signIn.title">Welcome back</Trans>
 				</Text>

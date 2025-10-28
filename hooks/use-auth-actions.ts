@@ -17,57 +17,57 @@ function splitFullName(fullName: string) {
 }
 
 export function useAuthActions() {
-	const { setSession, clearSession } = useAuthSession();
+	const { refetch } = useAuthSession();
 
 	const signIn = useCallback(
 		async (input: { email: string; password: string }) => {
-			const result = await authClient.$fetch("/login", {
-				method: "POST",
-				body: input,
+			// Use Better Auth's email sign-in to ensure cookie/session management is handled
+			const result = await authClient.signIn.email({
+				email: input.email,
+				password: input.password,
 			});
 
 			if (!result.error) {
-				setSession((result.data ?? null) as AuthResponse | null);
+				await refetch();
 			}
 
-			return result;
+			return {
+				error: result.error ?? null,
+				data: (result.data ?? null) as AuthResponse | null,
+			};
 		},
-		[setSession]
+		[refetch]
 	);
 
 	const signUp = useCallback(
 		async (input: { email: string; password: string; name: string }) => {
 			const { firstName, lastName } = splitFullName(input.name);
-			const result = await authClient.$fetch("/register", {
-				method: "POST",
-				body: {
-					email: input.email,
-					password: input.password,
-					firstName,
-					lastName,
-				},
+			// Use Better Auth's email sign-up
+			const result = await authClient.signUp.email({
+				email: input.email,
+				password: input.password,
+				name: `${firstName} ${lastName}`.trim(),
 			});
 
 			if (!result.error) {
-				setSession((result.data ?? null) as AuthResponse | null);
+				await refetch();
 			}
 
 			return result;
 		},
-		[setSession]
+		[refetch]
 	);
 
 	const signOut = useCallback(async () => {
-		const result = await authClient.$fetch("/logout", {
-			method: "POST",
-		});
+		// Use better-auth's native signOut for proper session cleanup
+		const result = await authClient.signOut();
 
 		if (!result.error) {
-			clearSession();
+			await refetch();
 		}
 
-		return result;
-	}, [clearSession]);
+		return { error: result.error, data: null };
+	}, [refetch]);
 
 	const changePassword = useCallback(
 		async (input: { currentPassword: string; newPassword: string }) => {
