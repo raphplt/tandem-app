@@ -8,10 +8,15 @@ import {
 	type ReactNode,
 } from "react";
 
-import { authClient } from "@/src/lib/auth/client";
+import { authClient, getAuthHeaders } from "@/src/lib/auth/client";
+import { storage, ensureInitialized } from "@/src/lib/auth/storage";
+import { env } from "@/src/config/env";
 import { extractErrorMessage } from "@/src/utils/error";
 
 export type AuthResponse = {
+	accessToken?: string;
+	refreshToken?: string;
+	expiresIn?: number;
 	token?: string;
 	user?: {
 		id: string;
@@ -39,6 +44,18 @@ type AuthContextValue = AuthState & {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
+function loadSessionFromStorage(): AuthResponse | null {
+	try {
+		const prefixedKey = `${env.authStoragePrefix}_session`;
+		const sessionStr = storage.getItem(prefixedKey);
+		if (!sessionStr) return null;
+		const session = JSON.parse(sessionStr) as AuthResponse;
+		return session;
+	} catch {
+		return null;
+	}
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
 	const [state, setState] = useState<AuthState>({
 		data: null,
@@ -48,6 +65,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 	});
 
 	const setSession = useCallback((session: AuthResponse | null) => {
+		if (session) {
+			storage.setItem(`${env.authStoragePrefix}_session`, JSON.stringify(session));
+		} else {
+			storage.removeItem(`${env.authStoragePrefix}_session`);
+		}
+
 		setState({
 			data: session,
 			isLoading: false,
@@ -57,6 +80,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 	}, []);
 
 	const clearSession = useCallback(() => {
+		storage.removeItem(`${env.authStoragePrefix}_session`);
+		storage.removeItem(`${env.authStoragePrefix}_cookie`);
 		setState({
 			data: null,
 			isLoading: false,
@@ -76,6 +101,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 		try {
 			const result = await authClient.$fetch("/profile", {
 				method: "GET",
+				headers: getAuthHeaders(),
 			});
 
 			if (result?.error) {
@@ -93,9 +119,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 			}
 
 			const payload = (result?.data ?? null) as AuthResponse | null;
+			const existingSession = loadSessionFromStorage();
+			const mergedSession = existingSession
+				? { ...existingSession, user: payload?.user || existingSession.user }
+				: payload;
+
+			if (mergedSession) {
+				storage.setItem(`${env.authStoragePrefix}_session`, JSON.stringify(mergedSession));
+			}
 
 			setState({
-				data: payload,
+				data: mergedSession,
 				isLoading: false,
 				isRefetching: false,
 				error: null,
@@ -111,8 +145,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 	}, []);
 
 	useEffect(() => {
-		refetch();
-	}, [refetch]);
+		let mounted = true;
+
+		async function initialize() {
+			try {
+				await ensureInitialized();
+				if (!mounted) return;
+
+				const savedSession = loadSessionFromStorage();
+				if (savedSession) {
+					setState((prev) => ({
+						...prev,
+						data: savedSession,
+						isLoading: false,
+					}));
+					refetch();
+				} else {
+					await refetch();
+				}
+			} catch (error) {
+				if (mounted) {
+					setState((prev) => ({
+						...prev,
+						isLoading: false,
+						error: extractErrorMessage(error),
+					}));
+				}
+			}
+		}
+
+		initialize();
+
+		return () => {
+			mounted = false;
+		};
+	}, []);
 
 	const value = useMemo<AuthContextValue>(
 		() => ({

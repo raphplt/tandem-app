@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 
 import { useAuthSession } from "@/hooks/use-auth-session";
-import { authClient } from "@/src/lib/auth/client";
+import { authClient, getAuthHeaders } from "@/src/lib/auth/client";
 import type { AuthResponse } from "@/src/providers/auth-provider";
 
 function splitFullName(fullName: string) {
@@ -60,6 +60,7 @@ export function useAuthActions() {
 	const signOut = useCallback(async () => {
 		const result = await authClient.$fetch("/logout", {
 			method: "POST",
+			headers: getAuthHeaders(),
 		});
 
 		if (!result.error) {
@@ -74,6 +75,7 @@ export function useAuthActions() {
 			return authClient.$fetch("/change-password", {
 				method: "POST",
 				body: input,
+				headers: getAuthHeaders(),
 			});
 		},
 		[]
