@@ -62,11 +62,10 @@ export function useAuthActions() {
 			method: "POST",
 			headers: getAuthHeaders(),
 		});
-
-		if (!result.error) {
-			clearSession();
+		if (result.error) {
+			console.error("Failed to sign out", result.error);
 		}
-
+		clearSession();
 		return result;
 	}, [clearSession]);
 

@@ -32,7 +32,8 @@ export default function SignUpScreen() {
 
 	useEffect(() => {
 		if (session) {
-			router.replace("/(tabs)");
+			// Vérifier si l'utilisateur a un profil, sinon rediriger vers l'onboarding
+			router.replace("/(onboarding)/welcome");
 		}
 	}, [session, router]);
 

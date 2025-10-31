@@ -5,6 +5,7 @@ import { useLinguiLocale } from "@/hooks/use-lingui-locale";
 import { useThemeStore } from "@/hooks/use-theme-store";
 import { I18nProvider, i18n } from "@/src/i18n";
 import { AuthProvider } from "@/src/providers/auth-provider";
+import { QueryProvider } from "@/src/providers/query-provider";
 import {
 	DarkTheme,
 	DefaultTheme,
@@ -38,16 +39,22 @@ export default function RootLayout() {
 		<GluestackUIProvider mode={actualThemeMode}>
 			<ThemeProvider value={actualThemeMode === "dark" ? DarkTheme : DefaultTheme}>
 				<I18nProvider i18n={i18n}>
-					<AuthProvider>
-						<Stack>
-							<Stack.Screen name="(auth)" options={{ headerShown: false }} />
-							<Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-							<Stack.Screen
-								name="modal"
-								options={{ presentation: "modal", title: "Modal" }}
-							/>
-						</Stack>
-					</AuthProvider>
+					<QueryProvider>
+						<AuthProvider>
+							<Stack>
+								<Stack.Screen name="(auth)" options={{ headerShown: false }} />
+								<Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+								<Stack.Screen
+									name="(onboarding)"
+									options={{ headerShown: false }}
+								/>
+								<Stack.Screen
+									name="modal"
+									options={{ presentation: "modal", title: "Modal" }}
+								/>
+							</Stack>
+						</AuthProvider>
+					</QueryProvider>
 				</I18nProvider>
 				<StatusBar style="auto" />
 			</ThemeProvider>
