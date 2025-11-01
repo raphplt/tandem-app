@@ -17,7 +17,7 @@ function cleanUrl(url: string | undefined): string | undefined {
 
 const rawApiUrl = process.env.EXPO_PUBLIC_API_URL;
 const cleanedApiUrl = cleanUrl(rawApiUrl);
-// Si l'URL contient déjà /api/v1, on l'enlève
+//TODO à clean ca
 const baseURL = cleanedApiUrl?.replace(/\/api\/v1\/?$/, "") || "http://localhost:3001";
 
 export const env = {
@@ -31,8 +31,4 @@ export const env = {
 	appScheme: process.env.EXPO_PUBLIC_APP_SCHEME ?? fallbackScheme ?? "tandem",
 };
 
-if (__DEV__ && !env.authBaseURL) {
-	console.warn(
-		"[auth] Missing EXPO_PUBLIC_AUTH_BASE_URL. Configure it to point to the Better Auth backend."
-	);
-}
+

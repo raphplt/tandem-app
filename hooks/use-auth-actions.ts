@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 
 import { useAuthSession } from "@/hooks/use-auth-session";
-import { authClient, getAuthHeaders } from "@/src/lib/auth/client";
+import { authClient } from "@/src/lib/auth/client";
 import type { AuthResponse } from "@/src/providers/auth-provider";
 
 function splitFullName(fullName: string) {
@@ -58,23 +58,22 @@ export function useAuthActions() {
 	);
 
 	const signOut = useCallback(async () => {
-		const result = await authClient.$fetch("/logout", {
-			method: "POST",
-			headers: getAuthHeaders(),
-		});
-		if (result.error) {
-			console.error("Failed to sign out", result.error);
+		try {
+			// Better Auth gère automatiquement les cookies
+			await authClient.signOut();
+			clearSession();
+		} catch (error) {
+			console.error("Failed to sign out", error);
+			throw error;
 		}
-		clearSession();
-		return result;
 	}, [clearSession]);
 
 	const changePassword = useCallback(
 		async (input: { currentPassword: string; newPassword: string }) => {
+			// Better Auth envoie automatiquement les cookies avec chaque requête
 			return authClient.$fetch("/change-password", {
 				method: "POST",
 				body: input,
-				headers: getAuthHeaders(),
 			});
 		},
 		[]

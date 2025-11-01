@@ -45,9 +45,7 @@ export default function SignInScreen() {
 		setError(null);
 
 		try {
-			console.log("Attempting sign-in with:", { email, password });
 			const result = await signIn({ email, password });
-			console.log("Sign-in result:", result);
 			if (result?.error) {
 				throw result.error;
 			}

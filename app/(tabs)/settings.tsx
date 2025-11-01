@@ -51,10 +51,7 @@ export default function SettingsScreen() {
 	const handleSignOut = async () => {
 		setIsSigningOut(true);
 		try {
-			const result = await signOut();
-			if (result?.error) {
-				throw result.error;
-			}
+			 await signOut();
 			router.replace("/(auth)/sign-in");
 		} catch (error) {
 			console.error("Failed to sign out", error);

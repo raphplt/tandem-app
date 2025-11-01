@@ -28,6 +28,7 @@ export default function ConfirmationScreen() {
 	const handleCreateProfile = async () => {
 		if (!session?.user?.id) {
 			Alert.alert("Erreur", "Session utilisateur non trouvée");
+			console.error("Session utilisateur non trouvée");
 			return;
 		}
 
@@ -40,6 +41,7 @@ export default function ConfirmationScreen() {
 			!onboardingData.interestedIn
 		) {
 			Alert.alert("Erreur", "Certaines données requises sont manquantes");
+			console.error("Certaines données requises sont manquantes");
 			return;
 		}
 
@@ -48,27 +50,76 @@ export default function ConfirmationScreen() {
 		try {
 			Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
-			await createProfile.mutateAsync({
-				bio: onboardingData.bio,
-				city: onboardingData.city,
-				country: onboardingData.country,
+			// Ne pas envoyer photoUrl si c'est une URI locale (file:// ou data:)
+			// Le backend attend une URL HTTP valide
+			const isLocalUri =
+				onboardingData.photoUrl?.startsWith("file://") ||
+				onboardingData.photoUrl?.startsWith("data:") ||
+				onboardingData.photoUrl?.startsWith("avatar-");
+
+			// Préparer les données du profil en nettoyant les valeurs undefined/vides
+			const profileData: any = {
+				bio: onboardingData.bio.trim(),
+				city: onboardingData.city.trim(),
 				age: onboardingData.age,
 				gender: onboardingData.gender,
 				interestedIn: onboardingData.interestedIn,
-				photoUrl: onboardingData.photoUrl,
-				preferences: {
+			};
+
+			// Ajouter country seulement si fourni et non vide
+			if (onboardingData.country && onboardingData.country.trim().length > 0) {
+				profileData.country = onboardingData.country.trim();
+			}
+
+			// Ajouter photoUrl seulement si c'est une URL HTTP valide
+			if (onboardingData.photoUrl && !isLocalUri) {
+				// Vérifier que c'est bien une URL valide
+				try {
+					new URL(onboardingData.photoUrl);
+					profileData.photoUrl = onboardingData.photoUrl;
+				} catch {
+					// Ce n'est pas une URL valide, on ne l'envoie pas
+					console.warn(
+						"[Onboarding] photoUrl n'est pas une URL valide:",
+						onboardingData.photoUrl
+					);
+				}
+			}
+
+			// Ajouter preferences seulement s'il y a des intérêts
+			if (onboardingData.interests && onboardingData.interests.length > 0) {
+				profileData.preferences = {
 					interests: onboardingData.interests,
-				},
-			});
+				};
+			}
+
+			if (__DEV__) {
+				console.log(
+					"[Onboarding] Sending profile data:",
+					JSON.stringify(profileData, null, 2)
+				);
+			}
+
+			await createProfile.mutateAsync(profileData);
 
 			reset();
 			router.replace("/(tabs)");
 		} catch (error: any) {
 			Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-			Alert.alert(
-				"Erreur",
-				error.message || "Une erreur est survenue lors de la création du profil"
+
+			let errorMessage = "Une erreur est survenue lors de la création du profil";
+
+			if (error.message) {
+				errorMessage = error.message;
+			} else if (typeof error === "string") {
+				errorMessage = error;
+			}
+
+			console.error(
+				"Une erreur est survenue lors de la création du profil",
+				error
 			);
+			Alert.alert("Erreur", errorMessage);
 		} finally {
 			setIsCreating(false);
 		}

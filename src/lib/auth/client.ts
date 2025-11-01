@@ -14,26 +14,6 @@ interface ApiResponse {
 	};
 }
 
-export function getAccessToken(): string | null {
-	try {
-		const prefix = env.authStoragePrefix + "_";
-		const sessionStr = storage.getItem(`${prefix}session`);
-		if (!sessionStr) return null;
-		const session = JSON.parse(sessionStr);
-		return session?.accessToken || null;
-	} catch {
-		return null;
-	}
-}
-
-export function getAuthHeaders(): Record<string, string> | undefined {
-	const token = getAccessToken();
-	if (!token) return undefined;
-	return {
-		Authorization: `Bearer ${token}`,
-	};
-}
-
 export const authClient = createAuthClient({
 	baseURL: env.authBaseURL,
 	plugins: [

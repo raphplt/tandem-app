@@ -8,7 +8,7 @@ import {
 	type ReactNode,
 } from "react";
 
-import { authClient, getAuthHeaders } from "@/src/lib/auth/client";
+import { authClient } from "@/src/lib/auth/client";
 import { storage, ensureInitialized } from "@/src/lib/auth/storage";
 import { env } from "@/src/config/env";
 import { extractErrorMessage } from "@/src/utils/error";
@@ -99,9 +99,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 		}));
 
 		try {
+			// Better Auth envoie automatiquement les cookies avec chaque requête
 			const result = await authClient.$fetch("/profile", {
 				method: "GET",
-				headers: getAuthHeaders(),
 			});
 
 			if (result?.error) {

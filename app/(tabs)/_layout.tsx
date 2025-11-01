@@ -5,7 +5,7 @@ import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useThemeStore } from "@/hooks/use-theme-store";
 import { Trans } from "@lingui/react/macro";
 import { Href, Redirect, Tabs } from "expo-router";
-import { AirplaneTilt, GearIcon, HouseIcon } from "phosphor-react-native";
+import { Chat, GearIcon, HouseIcon } from "phosphor-react-native";
 
 import React from "react";
 import { ActivityIndicator, Text, View } from "react-native";
@@ -57,14 +57,14 @@ export default function TabLayout() {
 				}}
 			/>
 			<Tabs.Screen
-				name="explore"
+				name="messages"
 				options={{
 					tabBarLabel: () => (
 						<Text>
-							<Trans id="tabs.explore">Explore</Trans>
+							<Trans id="tabs.messages">Messages</Trans>
 						</Text>
 					),
-					tabBarIcon: ({ color }) => <AirplaneTilt size={28} color={color} />,
+					tabBarIcon: ({ color }) => <Chat size={28} color={color} />,
 				}}
 			/>
 			<Tabs.Screen

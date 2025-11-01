@@ -1,5 +1,5 @@
 import { env } from "@/src/config/env";
-import { getAuthHeaders } from "@/src/lib/auth/client";
+import { storage } from "@/src/lib/auth/storage";
 import { extractErrorMessage } from "@/src/utils/error";
 
 const API_BASE_URL = env.baseURL;
@@ -10,21 +10,26 @@ export interface ApiError {
 	error: string;
 }
 
+function getCookies(): string | null {
+	const cookieKey = `${env.authStoragePrefix}_cookie`;
+	return storage.getItem(cookieKey);
+}
+
 export async function apiFetch<T>(
 	endpoint: string,
 	options: RequestInit = {}
 ): Promise<{ data: T | null; error: ApiError | null }> {
 	const url = `${API_BASE_URL}${endpoint}`;
 
-	if (__DEV__) {
-		console.log(`[API] Fetching: ${url}`);
-	}
-
-	const headers = {
+	const cookies = getCookies();
+	const headers: Record<string, string> = {
 		"Content-Type": "application/json",
-		...getAuthHeaders(),
-		...options.headers,
+		...((options.headers as Record<string, string>) || {}),
 	};
+
+	if (cookies) {
+		headers.Cookie = cookies;
+	}
 
 	try {
 		const response = await fetch(url, {
