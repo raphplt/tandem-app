@@ -1,9 +1,17 @@
 import { useAuthSession } from "@/hooks/use-auth-session";
 import { Trans } from "@lingui/react/macro";
-import { Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
 
 export default function HomeScreen() {
-	const { data: session } = useAuthSession();
+	const { data: session, isLoading } = useAuthSession();
+
+	if (isLoading) {
+		return (
+			<View className="flex-1 items-center justify-center">
+				<ActivityIndicator size="large" />
+			</View>
+		);
+	}
 
 	return (
 		<View className="flex-1 items-center justify-center">
