@@ -2,14 +2,25 @@ import { Stack } from "expo-router";
 
 export default function OnboardingLayout() {
 	return (
-		<Stack screenOptions={{ headerShown: false }}>
+		<Stack
+			screenOptions={{
+				headerShown: false,
+				animation: "fade_from_bottom",
+				presentation: "card",
+			}}
+		>
+			<Stack.Screen name="intro-values" />
+			<Stack.Screen name="first-name" />
+			<Stack.Screen name="gender-seeking" />
+			<Stack.Screen name="birthdate" />
+			<Stack.Screen name="location" />
+			<Stack.Screen name="prefs-age-distance" />
+			<Stack.Screen name="interests" />
+			<Stack.Screen name="photos" />
+			<Stack.Screen name="bio" />
+			<Stack.Screen name="auth-gate" />
 			<Stack.Screen name="welcome" />
-			<Stack.Screen name="profile-step-1" />
-			<Stack.Screen name="profile-step-2" />
-			<Stack.Screen name="profile-step-3" />
-			<Stack.Screen name="profile-step-4" />
-			<Stack.Screen name="profile-step-5" />
-			<Stack.Screen name="confirmation" />
+			<Stack.Screen name="home-gate" />
 		</Stack>
 	);
 }

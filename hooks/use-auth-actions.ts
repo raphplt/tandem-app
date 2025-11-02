@@ -20,11 +20,21 @@ export function useAuthActions() {
 	const { setSession, clearSession } = useAuthSession();
 
 	const signIn = useCallback(
-		async (input: { email: string; password: string }) => {
+		async (input: {
+			email: string;
+			password: string;
+			draftId?: string;
+			draftToken?: string;
+		}) => {
+			const { draftId, draftToken, ...credentials } = input;
 			const result = await apiFetch<AuthResponse>("/api/v1/auth/login", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify(input),
+				body: JSON.stringify({
+					...credentials,
+					...(draftId ? { draftId } : {}),
+					...(draftToken ? { draftToken } : {}),
+				}),
 			});
 
 			if (!result.error) {
@@ -45,7 +55,13 @@ export function useAuthActions() {
 	);
 
 	const signUp = useCallback(
-		async (input: { email: string; password: string; name: string }) => {
+		async (input: {
+			email: string;
+			password: string;
+			name: string;
+			draftId?: string;
+			draftToken?: string;
+		}) => {
 			const { firstName, lastName } = splitFullName(input.name);
 			const result = await apiFetch<AuthResponse>("/api/v1/auth/register", {
 				method: "POST",
@@ -55,6 +71,8 @@ export function useAuthActions() {
 					password: input.password,
 					firstName,
 					lastName,
+					...(input.draftId ? { draftId: input.draftId } : {}),
+					...(input.draftToken ? { draftToken: input.draftToken } : {}),
 				}),
 			});
 

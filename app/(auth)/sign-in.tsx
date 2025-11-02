@@ -1,6 +1,6 @@
 import { Trans } from "@lingui/react/macro";
-import { Href, Link, useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { Link, useLocalSearchParams, useRouter } from "expo-router";
+import { useEffect, useMemo, useState } from "react";
 import {
 	KeyboardAvoidingView,
 	Platform,
@@ -23,17 +23,47 @@ export default function SignInScreen() {
 	const router = useRouter();
 	const { signIn } = useAuthActions();
 	const { data: session } = useAuthSession();
+	const params = useLocalSearchParams<{
+		draftId?: string;
+		draftToken?: string;
+		returnTo?: string;
+		mode?: string;
+		email?: string;
+	}>();
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [error, setError] = useState<ErrorState>(null);
 	const [isSubmitting, setIsSubmitting] = useState(false);
-	const signUpHref = "/(auth)/sign-up" as Href;
+
+	const draftId = useMemo(() => {
+		const value = params.draftId;
+		return typeof value === "string" && value.length > 0 ? value : undefined;
+	}, [params.draftId]);
+
+	const draftToken = useMemo(() => {
+		const value = params.draftToken;
+		return typeof value === "string" && value.length > 0 ? value : undefined;
+	}, [params.draftToken]);
+
+	const returnTo = useMemo(() => {
+		const value = params.returnTo;
+		if (typeof value === "string" && value.length > 0) {
+			return value;
+		}
+		return "/(tabs)";
+	}, [params.returnTo]);
+
+	useEffect(() => {
+		if (typeof params.email === "string" && params.email.length > 0) {
+			setEmail(params.email);
+		}
+	}, [params.email]);
 
 	useEffect(() => {
 		if (session) {
-			router.replace("/(tabs)");
+			router.replace(returnTo as any);
 		}
-	}, [session, router]);
+	}, [returnTo, router, session]);
 
 	const handleSubmit = async () => {
 		if (!email || !password) {
@@ -45,7 +75,7 @@ export default function SignInScreen() {
 		setError(null);
 
 		try {
-			const result = await signIn({ email, password });
+			const result = await signIn({ email, password, draftId, draftToken });
 			if (result?.error) {
 				throw result.error;
 			}
@@ -65,8 +95,15 @@ export default function SignInScreen() {
 				<Text className="text-4xl font-bold text-zinc-900 dark:text-zinc-100 mb-8">
 					<Trans id="auth.signIn.title">Welcome back</Trans>
 				</Text>
+				{draftId && draftToken ? (
+					<Text className="mb-4 text-sm text-zinc-600 dark:text-zinc-300">
+						<Trans id="auth.signIn.onboardingResume">
+							Connexion requise pour finaliser ton profil Tandem.
+						</Trans>
+					</Text>
+				) : null}
 
-				<View className="space-y-4">
+				<View className="flex flex-col" style={{ gap: 16 }}>
 					<View>
 						<Text className="text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-2">
 							<Trans id="auth.signIn.email">Email</Trans>
@@ -128,7 +165,17 @@ export default function SignInScreen() {
 				<View className="mt-8 flex-row justify-center">
 					<Text className="text-sm text-zinc-600 dark:text-zinc-300">
 						<Trans id="auth.signIn.toSignUp">Need an account?</Trans>{" "}
-						<Link href={signUpHref} className="font-semibold text-blue-600">
+						<Link
+							href={{
+								pathname: "/(auth)/sign-up",
+								params: {
+									draftId: draftId ?? "",
+									draftToken: draftToken ?? "",
+									returnTo,
+								},
+							}}
+							className="font-semibold text-blue-600"
+						>
 							<Trans id="auth.signIn.goToSignUp">Create one</Trans>
 						</Link>
 					</Text>

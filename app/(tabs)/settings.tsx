@@ -86,7 +86,7 @@ export default function SettingsScreen() {
 					<Text className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4">
 						<Trans id="settings-screen.language">Language</Trans>
 					</Text>
-					<View className="space-y-2">
+				<View className="flex flex-col" style={{ gap: 8 }}>
 						{localeOptions.map((option) => (
 							<TouchableOpacity
 								key={option.value}
@@ -116,7 +116,7 @@ export default function SettingsScreen() {
 					<Text className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4">
 						<Trans id="settings-screen.theme">Theme</Trans>
 					</Text>
-					<View className="space-y-2">
+			<View className="flex flex-col" style={{ gap: 8 }}>
 						{themeOptions.map((option) => (
 							<TouchableOpacity
 								key={option.value}

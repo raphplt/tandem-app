@@ -26,28 +26,35 @@ function getStoredSession(): StoredSession {
 	}
 }
 
+type ApiRequestInit = RequestInit & {
+    skipAuth?: boolean;
+};
+
 export async function apiFetch<T>(
-	endpoint: string,
-	options: RequestInit = {}
+    endpoint: string,
+    options: ApiRequestInit = {}
 ): Promise<{ data: T | null; error: ApiError | null }> {
-	const url = `${API_BASE_URL}${endpoint}`;
+    const { skipAuth, headers: initHeaders, ...fetchOptions } = options;
+    const url = `${API_BASE_URL}${endpoint}`;
 
-	const headers: Record<string, string> = {
-		"Content-Type": "application/json",
-		...((options.headers as Record<string, string>) || {}),
-	};
+    const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+        ...((initHeaders as Record<string, string>) || {}),
+    };
 
-	const session = getStoredSession();
-	const bearer = session?.sessionToken;
-	if (bearer) {
-		headers.Authorization = `Bearer ${bearer}`;
-	}
+    if (!skipAuth) {
+        const session = getStoredSession();
+        const bearer = session?.sessionToken;
+        if (bearer) {
+            headers.Authorization = `Bearer ${bearer}`;
+        }
+    }
 
 	try {
-		const response = await fetch(url, {
-			...options,
-			headers,
-		});
+        const response = await fetch(url, {
+            ...fetchOptions,
+            headers,
+        });
 
 		if (!response.ok) {
 			const errorData = await response.json().catch(() => ({

@@ -1,0 +1,6 @@
+- [x] Set up onboarding foundation: Zustand draft store, API service wrapper, presign upload hook, analytics helper.
+- [x] Restructure Expo Router onboarding stack with new screen order and transitions.
+- [x] Implement each onboarding step (IntroValues to Bio) with validation, themed UI, and draft persistence.
+- [ ] Build AuthGate screen with Apple/Google/Phone providers, draft merge logic, and early sign-in link.
+- [x] Create HomeGate guard, wrap up welcome flow, and ensure analytics events fire.
+- [x] Document flow in README_onboarding.md with setup, testing, and capture instructions.

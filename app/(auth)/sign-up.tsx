@@ -1,6 +1,6 @@
 import { Trans } from "@lingui/react/macro";
-import { Href, Link, useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { Link, useLocalSearchParams, useRouter } from "expo-router";
+import { useEffect, useMemo, useState } from "react";
 import {
 	KeyboardAvoidingView,
 	Platform,
@@ -23,19 +23,43 @@ export default function SignUpScreen() {
 	const router = useRouter();
 	const { signUp } = useAuthActions();
 	const { data: session } = useAuthSession();
+	const params = useLocalSearchParams<{
+		draftId?: string;
+		draftToken?: string;
+		returnTo?: string;
+		mode?: string;
+	}>();
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [name, setName] = useState("");
 	const [error, setError] = useState<ErrorState>(null);
 	const [isSubmitting, setIsSubmitting] = useState(false);
-	const signInHref = "/(auth)/sign-in" as Href;
+
+	const draftId = useMemo(() => {
+		const value = params.draftId;
+		return typeof value === "string" && value.length > 0 ? value : undefined;
+	}, [params.draftId]);
+
+	const draftToken = useMemo(() => {
+		const value = params.draftToken;
+		return typeof value === "string" && value.length > 0 ? value : undefined;
+	}, [params.draftToken]);
+
+	const returnTo = useMemo(() => {
+		const value = params.returnTo;
+		if (typeof value === "string" && value.length > 0) {
+			return value;
+		}
+		return "#";
+	}, [params.returnTo]);
 
 	useEffect(() => {
 		if (session) {
-			// Vérifier si l'utilisateur a un profil, sinon rediriger vers l'onboarding
-			router.replace("/(onboarding)/welcome");
+			router.replace(
+				returnTo === "#" ? "/(onboarding)/welcome" : (returnTo as any)
+			);
 		}
-	}, [session, router]);
+	}, [returnTo, router, session]);
 
 	const handleSubmit = async () => {
 		if (!email || !password || !name) {
@@ -47,7 +71,13 @@ export default function SignUpScreen() {
 		setError(null);
 
 		try {
-			const result = await signUp({ email, password, name });
+			const result = await signUp({
+				email,
+				password,
+				name,
+				draftId,
+				draftToken,
+			});
 			if (result?.error) {
 				throw result.error;
 			}
@@ -67,8 +97,15 @@ export default function SignUpScreen() {
 				<Text className="text-4xl font-bold text-zinc-900 dark:text-zinc-100 mb-8">
 					<Trans id="auth.signUp.title">Create your account</Trans>
 				</Text>
+				{/* {draftId && draftToken ? (
+					<Text className="mb-4 text-sm text-zinc-600 dark:text-zinc-300">
+					<Trans id="auth.signUp.onboardingResume">
+							Nous lierons ton brouillon d&apos;onboarding à ton nouveau compte.
+						</Trans>
+					</Text>
+				) : null} */}
 
-				<View className="space-y-4">
+				<View className="flex flex-col" style={{ gap: 16 }}>
 					<View>
 						<Text className="text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-2">
 							<Trans id="auth.signUp.name">Full name</Trans>
@@ -145,7 +182,17 @@ export default function SignUpScreen() {
 				<View className="mt-8 flex-row justify-center">
 					<Text className="text-sm text-zinc-600 dark:text-zinc-300">
 						<Trans id="auth.signUp.toSignIn">Already registered?</Trans>{" "}
-						<Link href={signInHref} className="font-semibold text-blue-600">
+						<Link
+							href={{
+								pathname: "/(auth)/sign-in",
+								params: {
+									draftId: draftId ?? "",
+									draftToken: draftToken ?? "",
+									returnTo,
+								},
+							}}
+							className="font-semibold text-blue-600"
+						>
 							<Trans id="auth.signUp.goToSignIn">Sign in</Trans>
 						</Link>
 					</Text>
