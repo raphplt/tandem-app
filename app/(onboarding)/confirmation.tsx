@@ -22,7 +22,6 @@ export default function ConfirmationScreen() {
 
 	useEffect(() => {
 		handleCreateProfile();
-		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
 	const handleCreateProfile = async () => {
@@ -32,7 +31,6 @@ export default function ConfirmationScreen() {
 			return;
 		}
 
-		// Validation des données requises
 		if (
 			!onboardingData.bio ||
 			!onboardingData.age ||
@@ -50,14 +48,11 @@ export default function ConfirmationScreen() {
 		try {
 			Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
-			// Ne pas envoyer photoUrl si c'est une URI locale (file:// ou data:)
-			// Le backend attend une URL HTTP valide
 			const isLocalUri =
 				onboardingData.photoUrl?.startsWith("file://") ||
 				onboardingData.photoUrl?.startsWith("data:") ||
 				onboardingData.photoUrl?.startsWith("avatar-");
 
-			// Préparer les données du profil en nettoyant les valeurs undefined/vides
 			const profileData: any = {
 				bio: onboardingData.bio.trim(),
 				city: onboardingData.city.trim(),
@@ -66,19 +61,15 @@ export default function ConfirmationScreen() {
 				interestedIn: onboardingData.interestedIn,
 			};
 
-			// Ajouter country seulement si fourni et non vide
 			if (onboardingData.country && onboardingData.country.trim().length > 0) {
 				profileData.country = onboardingData.country.trim();
 			}
 
-			// Ajouter photoUrl seulement si c'est une URL HTTP valide
 			if (onboardingData.photoUrl && !isLocalUri) {
-				// Vérifier que c'est bien une URL valide
 				try {
 					new URL(onboardingData.photoUrl);
 					profileData.photoUrl = onboardingData.photoUrl;
 				} catch {
-					// Ce n'est pas une URL valide, on ne l'envoie pas
 					console.warn(
 						"[Onboarding] photoUrl n'est pas une URL valide:",
 						onboardingData.photoUrl
@@ -86,18 +77,10 @@ export default function ConfirmationScreen() {
 				}
 			}
 
-			// Ajouter preferences seulement s'il y a des intérêts
 			if (onboardingData.interests && onboardingData.interests.length > 0) {
 				profileData.preferences = {
 					interests: onboardingData.interests,
 				};
-			}
-
-			if (__DEV__) {
-				console.log(
-					"[Onboarding] Sending profile data:",
-					JSON.stringify(profileData, null, 2)
-				);
 			}
 
 			await createProfile.mutateAsync(profileData);

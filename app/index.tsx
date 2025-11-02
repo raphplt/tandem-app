@@ -1,12 +1,16 @@
 import { Href, Redirect, usePathname } from "expo-router";
-import { useMemo, useEffect } from "react";
+import { useMemo } from "react";
 import { ActivityIndicator, View } from "react-native";
 
 import { useAuthSession } from "@/hooks/use-auth-session";
 import { useMyProfile } from "@/src/hooks/use-profiles";
 
 export default function Index() {
-	const { data: session, isLoading: isAuthLoading, isRefetching } = useAuthSession();
+	const {
+		data: session,
+		isLoading: isAuthLoading,
+		isRefetching,
+	} = useAuthSession();
 	const { data: profile, isLoading: isProfileLoading } = useMyProfile();
 	const pathname = usePathname();
 	const tabRoute = "/(tabs)" as Href;
@@ -31,7 +35,6 @@ export default function Index() {
 			return null;
 		}
 
-		// Si l'utilisateur n'a pas de profil, rediriger vers l'onboarding
 		if (!profile) {
 			return <Redirect href={onboardingRoute} />;
 		}

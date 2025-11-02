@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 
 import { useAuthSession } from "@/hooks/use-auth-session";
-import { authClient } from "@/src/lib/auth/client";
+import { apiFetch } from "@/src/lib/api/client";
 import type { AuthResponse } from "@/src/providers/auth-provider";
 
 function splitFullName(fullName: string) {
@@ -21,13 +21,22 @@ export function useAuthActions() {
 
 	const signIn = useCallback(
 		async (input: { email: string; password: string }) => {
-			const result = await authClient.$fetch("/login", {
+			const result = await apiFetch<AuthResponse>("/api/v1/auth/login", {
 				method: "POST",
-				body: input,
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify(input),
 			});
 
 			if (!result.error) {
-				setSession((result.data ?? null) as AuthResponse | null);
+				const data = (result.data ?? null) as any;
+				const minimal: AuthResponse | null = data
+					? {
+							sessionToken: data.sessionToken,
+							expiresIn: data.expiresIn,
+							user: data.user,
+					  }
+					: null;
+				setSession(minimal);
 			}
 
 			return result;
@@ -38,18 +47,27 @@ export function useAuthActions() {
 	const signUp = useCallback(
 		async (input: { email: string; password: string; name: string }) => {
 			const { firstName, lastName } = splitFullName(input.name);
-			const result = await authClient.$fetch("/register", {
+			const result = await apiFetch<AuthResponse>("/api/v1/auth/register", {
 				method: "POST",
-				body: {
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
 					email: input.email,
 					password: input.password,
 					firstName,
 					lastName,
-				},
+				}),
 			});
 
 			if (!result.error) {
-				setSession((result.data ?? null) as AuthResponse | null);
+				const data = (result.data ?? null) as any;
+				const minimal: AuthResponse | null = data
+					? {
+							sessionToken: data.sessionToken,
+							expiresIn: data.expiresIn,
+							user: data.user,
+					  }
+					: null;
+				setSession(minimal);
 			}
 
 			return result;
@@ -59,8 +77,8 @@ export function useAuthActions() {
 
 	const signOut = useCallback(async () => {
 		try {
-			// Better Auth gère automatiquement les cookies
-			await authClient.signOut();
+			// Bearer-only: call logout endpoint with Authorization header, then clear local session
+			await apiFetch("/api/v1/auth/logout", { method: "POST" });
 			clearSession();
 		} catch (error) {
 			console.error("Failed to sign out", error);
@@ -70,10 +88,10 @@ export function useAuthActions() {
 
 	const changePassword = useCallback(
 		async (input: { currentPassword: string; newPassword: string }) => {
-			// Better Auth envoie automatiquement les cookies avec chaque requête
-			return authClient.$fetch("/change-password", {
+			return apiFetch("/api/v1/auth/change-password", {
 				method: "POST",
-				body: input,
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify(input),
 			});
 		},
 		[]

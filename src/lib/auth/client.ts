@@ -9,9 +9,6 @@ interface ApiResponse {
 		url?: string;
 	};
 	data?: any;
-	headers?: {
-		"set-cookie"?: string | string[];
-	};
 }
 
 export const authClient = createAuthClient({
@@ -24,15 +21,8 @@ export const authClient = createAuthClient({
 		}),
 	],
 	onSuccess: (response: ApiResponse) => {
-		const cookies = response.headers?.["set-cookie"];
-		if (cookies) {
-			const cookieValue = Array.isArray(cookies) ? cookies.join("; ") : cookies;
-			storage.setItem(`${env.authStoragePrefix}_cookie`, cookieValue);
-		}
-
 		if (response.config.url?.includes("/logout")) {
 			storage.removeItem(`${env.authStoragePrefix}_session`);
-			storage.removeItem(`${env.authStoragePrefix}_cookie`);
 		}
 	},
 });

@@ -10,9 +10,20 @@ export interface ApiError {
 	error: string;
 }
 
-function getCookies(): string | null {
-	const cookieKey = `${env.authStoragePrefix}_cookie`;
-	return storage.getItem(cookieKey);
+type StoredSession = {
+	sessionToken?: string;
+	user?: unknown;
+} | null;
+
+function getStoredSession(): StoredSession {
+	const key = `${env.authStoragePrefix}_session`;
+	const raw = storage.getItem(key);
+	if (!raw) return null;
+	try {
+		return JSON.parse(raw) as StoredSession;
+	} catch {
+		return null;
+	}
 }
 
 export async function apiFetch<T>(
@@ -21,14 +32,15 @@ export async function apiFetch<T>(
 ): Promise<{ data: T | null; error: ApiError | null }> {
 	const url = `${API_BASE_URL}${endpoint}`;
 
-	const cookies = getCookies();
 	const headers: Record<string, string> = {
 		"Content-Type": "application/json",
 		...((options.headers as Record<string, string>) || {}),
 	};
 
-	if (cookies) {
-		headers.Cookie = cookies;
+	const session = getStoredSession();
+	const bearer = session?.sessionToken;
+	if (bearer) {
+		headers.Authorization = `Bearer ${bearer}`;
 	}
 
 	try {

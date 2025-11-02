@@ -1,17 +1,17 @@
+import { onboardingStep3Schema } from "@/src/lib/validations/onboarding";
+import { useOnboardingStore } from "@/src/stores/onboarding-store";
 import { Trans } from "@lingui/react/macro";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
-	View,
-	Text,
-	TextInput,
-	TouchableOpacity,
 	KeyboardAvoidingView,
 	Platform,
 	ScrollView,
+	Text,
+	TextInput,
+	TouchableOpacity,
+	View,
 } from "react-native";
-import { useOnboardingStore } from "@/src/stores/onboarding-store";
-import { onboardingStep3Schema } from "@/src/lib/validations/onboarding";
 
 const placeholders = [
 	"onboarding.profile.step4.placeholder1",
@@ -33,7 +33,8 @@ export default function ProfileStep4Screen() {
 		const result = onboardingStep3Schema.safeParse({ bio });
 
 		if (!result.success) {
-			setError(result.error.errors[0].message);
+			// ZodError has `issues`, not `errors`
+			setError(result.error.issues[0]?.message ?? "Invalid input");
 			return;
 		}
 

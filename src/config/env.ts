@@ -9,7 +9,6 @@ const fallbackScheme = Array.isArray(expoConfig?.scheme)
 	? expoConfig.scheme[0]
 	: expoConfig?.scheme;
 
-// Nettoyer l'URL pour enlever les guillemets en trop et les espaces
 function cleanUrl(url: string | undefined): string | undefined {
 	if (!url) return undefined;
 	return url.replace(/^["']|["']$/g, "").trim().replace(/\/$/, "");
@@ -17,7 +16,7 @@ function cleanUrl(url: string | undefined): string | undefined {
 
 const rawApiUrl = process.env.EXPO_PUBLIC_API_URL;
 const cleanedApiUrl = cleanUrl(rawApiUrl);
-//TODO à clean ca
+//TODO à clean ?
 const baseURL = cleanedApiUrl?.replace(/\/api\/v1\/?$/, "") || "http://localhost:3001";
 
 export const env = {
