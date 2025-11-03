@@ -8,7 +8,6 @@ import {
 } from "@/components/onboarding";
 import { useOnboardingAnalytics } from "@/src/hooks/use-onboarding-analytics";
 import { useOnboardingDraft } from "@/src/hooks/use-onboarding-draft";
-import { Text } from "react-native";
 
 export default function WelcomeScreen() {
 	const router = useRouter();
@@ -44,12 +43,6 @@ export default function WelcomeScreen() {
 					accessibilityLabel="Continuer vers l’écran de synchronisation"
 				/>
 			}
-		>
-			<Text className="text-center text-base font-body text-typography-500 dark:text-zinc-400">
-				<Trans id="onboarding.welcome.postAuth.reminder">
-					Ton brouillon vient d’être fusionné avec ton compte.
-				</Trans>
-			</Text>
-		</OnboardingShell>
+		></OnboardingShell>
 	);
 }

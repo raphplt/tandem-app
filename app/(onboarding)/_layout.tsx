@@ -19,6 +19,8 @@ export default function OnboardingLayout() {
 			<Stack.Screen name="photos" />
 			<Stack.Screen name="bio" />
 			<Stack.Screen name="auth-gate" />
+			<Stack.Screen name="auth-email-signup" />
+			<Stack.Screen name="auth-email-signin" />
 			<Stack.Screen name="welcome" />
 			<Stack.Screen name="home-gate" />
 		</Stack>

@@ -12,7 +12,9 @@ export function useMyProfile() {
 	return useQuery({
 		queryKey: [...PROFILES_KEY, "my"],
 		queryFn: async () => {
-			const result = await apiFetch<ProfileResponseDto>("/api/v1/profiles/my");
+			const result = await apiFetch<ProfileResponseDto>(
+				"/api/v1/users/me/profile"
+			);
 			if (result.error) {
 				if (result.error.statusCode === 404) {
 					return null;
@@ -82,4 +84,3 @@ export function useUpdateProfile(profileId: string) {
 		},
 	});
 }
-

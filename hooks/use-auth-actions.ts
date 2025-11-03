@@ -58,19 +58,19 @@ export function useAuthActions() {
 		async (input: {
 			email: string;
 			password: string;
-			name: string;
+			name?: string;
 			draftId?: string;
 			draftToken?: string;
 		}) => {
-			const { firstName, lastName } = splitFullName(input.name);
+			const { firstName, lastName } = splitFullName(input.name ?? "");
 			const result = await apiFetch<AuthResponse>("/api/v1/auth/register", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({
 					email: input.email,
 					password: input.password,
-					firstName,
-					lastName,
+					...(firstName ? { firstName } : {}),
+					...(lastName ? { lastName } : {}),
 					...(input.draftId ? { draftId: input.draftId } : {}),
 					...(input.draftToken ? { draftToken: input.draftToken } : {}),
 				}),

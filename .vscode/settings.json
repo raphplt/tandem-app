@@ -4,5 +4,12 @@
 		"source.organizeImports": "explicit",
 		"source.sortMembers": "explicit"
 	},
-	"cSpell.words": ["Fraunces", "Gluestack", "intlayer", "lingui", "Lingui"]
+	"cSpell.words": [
+		"Fraunces",
+		"Gluestack",
+		"intlayer",
+		"lingui",
+		"Lingui",
+		"Presign"
+	]
 }

@@ -11,6 +11,7 @@ export type OnboardingStepKey =
 	| "photos"
 	| "bio"
 	| "auth-gate"
+	| "auth-email"
 	| "welcome"
 	| "home-gate";
 

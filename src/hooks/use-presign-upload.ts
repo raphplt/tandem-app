@@ -1,5 +1,5 @@
+import * as FileSystem from "expo-file-system/legacy";
 import { useCallback, useMemo } from "react";
-import { FileSystemUploadType, uploadAsync } from "expo-file-system";
 
 import { useOnboardingDraft } from "@/src/hooks/use-onboarding-draft";
 import { requestPresignedUpload } from "@/src/lib/onboarding/service";
@@ -31,17 +31,19 @@ async function uploadToPresignedUrl(params: {
 	contentType: string;
 }) {
 	const { url, localUri, contentType } = params;
-	const uploadResult = await uploadAsync(url, localUri, {
+	const uploadResult = await FileSystem.uploadAsync(url, localUri, {
 		httpMethod: "PUT",
 		headers: {
 			"Content-Type": contentType,
 		},
-		uploadType: FileSystemUploadType.BINARY_CONTENT,
+		uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
 	});
 
 	if (uploadResult.status >= 400) {
 		throw new Error(
-			`Upload failed with status ${uploadResult.status}: ${uploadResult.body ?? "Unknown"}`
+			`Upload failed with status ${uploadResult.status}: ${
+				uploadResult.body ?? "Unknown"
+			}`
 		);
 	}
 
@@ -111,9 +113,7 @@ export function usePresignUpload() {
 
 			const uploadedRemoteUrls = useOnboardingDraft
 				.getState()
-				.photos.filter(
-					(photo) => photo.status === "uploaded" && photo.remoteUrl
-				)
+				.photos.filter((photo) => photo.status === "uploaded" && photo.remoteUrl)
 				.map((photo) => photo.remoteUrl!) as string[];
 
 			await syncPhotosWithRemote(uploadedRemoteUrls);
@@ -197,9 +197,7 @@ export function usePresignUpload() {
 			removePhoto(photoId);
 			const uploadedRemoteUrls = useOnboardingDraft
 				.getState()
-				.photos.filter(
-					(photo) => photo.status === "uploaded" && photo.remoteUrl
-				)
+				.photos.filter((photo) => photo.status === "uploaded" && photo.remoteUrl)
 				.map((photo) => photo.remoteUrl!) as string[];
 
 			if (useOnboardingDraft.getState().draftToken) {

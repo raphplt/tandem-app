@@ -30,7 +30,7 @@ Chaque écran est implémenté dans `app/(onboarding)/*.tsx` et consomme `Onboar
 
 ## Points d’attention
 
-- **Auth providers** : l’écran `AuthGate` prépare le câblage (`draftId`/`draftToken` transmis à `/(auth)/sign-in` & `sign-up`). Les boutons Apple / Google / Phone affichent aujourd’hui un message “Bientôt” en attendant l’intégration Expo Auth Session + endpoints dédiés.
+- **Auth providers** : l’écran `AuthGate` oriente vers `auth-email-signup` (UI onboarding) avec `draftId`/`draftToken`. Les boutons Apple / Google / Phone affichent aujourd’hui un message “Bientôt” en attendant l’intégration Expo Auth Session + endpoints dédiés.
 - **Merge draft** : les appels `signIn`/`signUp` transmettent optionnellement `draftId` & `draftToken`; côté backend prévoir la fusion via `/auth/{provider}` comme décrit dans `docs/onboarding-frontend.md`.
 - **Uploads** : `use-presign-upload` enchaîne presign → PUT (expo-file-system) → update draft API. Les états `uploading` / `error` sont gérés dans l’UI `Photos`.
 - **Analytics** : `useOnboardingStep` + `useOnboardingAnalytics` traquent `onboarding_step_view` / `onboarding_continue`; `AuthGate` envoie `auth_success` sur détection de session.

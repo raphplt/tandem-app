@@ -70,15 +70,13 @@ export default function AuthGateScreen() {
 
 		setLastMode(mode);
 		trackContinue({ mode });
-		router.push({
-			pathname: "/(auth)/sign-in",
-			params: {
-				draftId: draftMeta.draftId ?? "",
-				draftToken: draftMeta.draftToken ?? "",
-				returnTo: "/(onboarding)/welcome",
-				mode,
-			},
-		});
+	router.push({
+		pathname: "/(onboarding)/auth-email-signup",
+		params: {
+			draftId: draftMeta.draftId ?? "",
+			draftToken: draftMeta.draftToken ?? "",
+		},
+	});
 	};
 
 	const handleUnavailable = (mode: Exclude<AuthMode, "email">) => {
@@ -106,36 +104,17 @@ export default function AuthGateScreen() {
 				}
 				headerAccessory={<StepIndicator current={9} total={9} />}
 				footer={
-				<View className="flex flex-col" style={{ gap: 12 }}>
-						<OnboardingGradientButton
-							label={
-								<Trans id="onboarding.authGate.email">
-									Continuer avec l&apos;email
-								</Trans>
-							}
-							onPress={() => navigateToAuth("email")}
-							disabled={isEnsuringDraft}
-							loading={isEnsuringDraft}
-							accessibilityLabel="Continuer avec l’authentification e-mail"
-						/>
-						<Pressable
-							onPress={() =>
-								router.push({
-									pathname: "/(auth)/sign-up",
-									params: {
-										draftId: draftMeta.draftId ?? "",
-										draftToken: draftMeta.draftToken ?? "",
-										returnTo: "/(onboarding)/welcome",
-									},
-								})
-							}
-							disabled={isEnsuringDraft}
-						>
-							<Text className="text-center text-sm font-semibold text-typography-500 underline dark:text-zinc-300">
-								<Trans id="onboarding.authGate.signup">Créer un nouveau compte</Trans>
-							</Text>
-						</Pressable>
-					</View>
+					<OnboardingGradientButton
+						label={
+							<Trans id="onboarding.authGate.email">
+								Continuer avec l&apos;email
+							</Trans>
+						}
+						onPress={() => navigateToAuth("email")}
+						disabled={isEnsuringDraft}
+						loading={isEnsuringDraft}
+						accessibilityLabel="Continuer avec l’authentification e-mail"
+					/>
 				}
 			>
 			<View className="flex flex-col" style={{ gap: 16 }}>

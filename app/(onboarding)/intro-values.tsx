@@ -47,11 +47,16 @@ export default function IntroValuesScreen() {
 						accessibilityRole="button"
 						onPress={handleStart}
 					/>
-					<View className="items-center">
-						<Link
-							href="/(auth)/sign-in"
-							className="text-sm font-body text-typography-500 underline dark:text-zinc-400"
-						>
+			<View className="items-center">
+				<Link
+					href={{
+						pathname: "/(onboarding)/auth-email-signin",
+						params: {
+							returnTo: "/(tabs)",
+						},
+					}}
+					className="text-sm font-body text-typography-500 underline dark:text-zinc-400"
+				>
 							<Trans id="onboarding.intro.alreadyAccount">
 								J&apos;ai déjà un compte
 							</Trans>

@@ -1,9 +1,9 @@
-import { useCallback, useMemo, useState } from "react";
 import { Trans } from "@lingui/react/macro";
-import { useRouter } from "expo-router";
-import { ActivityIndicator, Alert, Pressable, Text, View } from "react-native";
-import * as ImagePicker from "expo-image-picker";
 import { Image } from "expo-image";
+import * as ImagePicker from "expo-image-picker";
+import { useRouter } from "expo-router";
+import { useCallback, useMemo, useState } from "react";
+import { ActivityIndicator, Alert, Pressable, Text, View } from "react-native";
 
 import {
 	OnboardingGradientButton,
@@ -28,7 +28,8 @@ export default function PhotosScreen() {
 	const [loading, setLoading] = useState(false);
 
 	const uploadedPhotos = useMemo(
-		() => photos.filter((photo) => photo.status === "uploaded" && photo.remoteUrl),
+		() =>
+			photos.filter((photo) => photo.status === "uploaded" && photo.remoteUrl),
 		[photos]
 	);
 
@@ -41,12 +42,12 @@ export default function PhotosScreen() {
 		setError(null);
 		const permissions = await ImagePicker.requestMediaLibraryPermissionsAsync();
 		if (!permissions.granted) {
-			setError("Autorise l’accès à ta galerie pour importer une photo");
+			setError("Autorise l'accès à ta galerie pour importer une photo");
 			return;
 		}
 
 		const result = await ImagePicker.launchImageLibraryAsync({
-			mediaTypes: ImagePicker.MediaTypeOptions.Images,
+			mediaTypes: ["images"],
 			allowsMultipleSelection: false,
 			quality: 0.9,
 		});
@@ -115,8 +116,8 @@ export default function PhotosScreen() {
 			title={<Trans id="onboarding.photos.title">Ajoute quelques photos</Trans>}
 			subtitle={
 				<Trans id="onboarding.photos.subtitle">
-					Un profil authentique avec 1 à 3 photos lumineuses. Tu pourras les
-					changer plus tard.
+					Un profil authentique avec 1 à 3 photos lumineuses. Tu pourras les changer
+					plus tard.
 				</Trans>
 			}
 			headerAccessory={<StepIndicator current={7} total={9} />}

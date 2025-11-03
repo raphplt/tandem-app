@@ -11,16 +11,16 @@ import { useMyProfile } from "@/src/hooks/use-profiles";
 
 export default function HomeGateScreen() {
 	const router = useRouter();
-	const { data: session } = useAuthSession();
+	const { data: session, isLoading: isSessionLoading } = useAuthSession();
 	const resetDraft = useOnboardingDraft((state) => state.reset);
 	const { trackContinue } = useOnboardingStep("home-gate");
 	const { data: profile, isLoading, refetch, isError } = useMyProfile();
 
 	useEffect(() => {
-		if (!session) {
+		if (!isSessionLoading && !session) {
 			router.replace("/(onboarding)/auth-gate");
 		}
-	}, [router, session]);
+	}, [isSessionLoading, router, session]);
 
 	useEffect(() => {
 		if (!profile) return;

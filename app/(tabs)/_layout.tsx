@@ -14,7 +14,7 @@ export default function TabLayout() {
 	const colorScheme = useColorScheme();
 	const { mode } = useThemeStore();
 	const { data: session, isLoading, isRefetching } = useAuthSession();
-	const signInHref = "/(auth)/sign-in" as Href;
+	const onboardingHref = "/(onboarding)/intro-values" as Href;
 
 	const getActualThemeMode = () => {
 		if (mode === "system") {
@@ -34,7 +34,7 @@ export default function TabLayout() {
 	}
 
 	if (!session) {
-		return <Redirect href={signInHref} />;
+		return <Redirect href={onboardingHref} />;
 	}
 
 	return (
