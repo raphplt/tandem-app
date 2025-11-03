@@ -1,14 +1,14 @@
-import { useEffect } from "react";
 import { Trans } from "@lingui/react/macro";
 import { Link, useRouter } from "expo-router";
+import { useEffect } from "react";
 import { Text, View } from "react-native";
 
-import { useOnboardingAnalytics } from "@/src/hooks/use-onboarding-analytics";
-import { useOnboardingDraft } from "@/src/hooks/use-onboarding-draft";
 import {
 	OnboardingGradientButton,
 	OnboardingShell,
 } from "@/components/onboarding";
+import { useOnboardingAnalytics } from "@/src/hooks/use-onboarding-analytics";
+import { useOnboardingDraft } from "@/src/hooks/use-onboarding-draft";
 
 export default function IntroValuesScreen() {
 	const router = useRouter();
@@ -63,7 +63,7 @@ export default function IntroValuesScreen() {
 			<View className="flex flex-col" style={{ gap: 16 }}>
 				<Text className="text-center text-base font-body text-typography-500 dark:text-zinc-400">
 					<Trans id="onboarding.intro.value1">
-						Tandem ralentit les choses pour que chaque échange compte.
+						Flint ralentit les choses pour que chaque échange compte.
 					</Trans>
 				</Text>
 				<Text className="text-center text-base font-body text-typography-500 dark:text-zinc-400">

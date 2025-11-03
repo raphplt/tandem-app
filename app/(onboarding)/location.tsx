@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
 import { Trans } from "@lingui/react/macro";
 import { useRouter } from "expo-router";
+import { useMemo, useState } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 
 import {
@@ -53,9 +53,9 @@ export default function LocationScreen() {
 
 		const coords = coordsProvided
 			? {
-				latitude: parseFloat(latitude.replace(",", ".")),
-				longitude: parseFloat(longitude.replace(",", ".")),
-			}
+					latitude: parseFloat(latitude.replace(",", ".")),
+					longitude: parseFloat(longitude.replace(",", ".")),
+			  }
 			: undefined;
 
 		if (
@@ -107,8 +107,8 @@ export default function LocationScreen() {
 			title={<Trans id="onboarding.location.title">Où es-tu basé(e) ?</Trans>}
 			subtitle={
 				<Trans id="onboarding.location.subtitle">
-					Tandem vous propose des rencontres proches de chez vous, garde la main
-					sur ce que tu partages.
+					Flint vous propose des rencontres proches de chez vous, garde la main sur
+					ce que tu partages.
 				</Trans>
 			}
 			headerAccessory={<StepIndicator current={4} total={9} />}
@@ -122,7 +122,7 @@ export default function LocationScreen() {
 				/>
 			}
 		>
-		<View className="flex flex-col" style={{ gap: 12 }}>
+			<View className="flex flex-col" style={{ gap: 12 }}>
 				<Text className="text-sm font-body text-typography-500 dark:text-zinc-400">
 					<Trans id="onboarding.location.city">Ville</Trans>
 				</Text>
@@ -136,7 +136,7 @@ export default function LocationScreen() {
 				/>
 			</View>
 
-		<View className="flex flex-col" style={{ gap: 12 }}>
+			<View className="flex flex-col" style={{ gap: 12 }}>
 				<Text className="text-sm font-body text-typography-500 dark:text-zinc-400">
 					<Trans id="onboarding.location.country">Pays</Trans>
 				</Text>
@@ -168,8 +168,8 @@ export default function LocationScreen() {
 			</Pressable>
 
 			{showAdvanced ? (
-			<View className="flex-row gap-4">
-				<View className="flex-1 flex flex-col" style={{ gap: 8 }}>
+				<View className="flex-row gap-4">
+					<View className="flex-1 flex flex-col" style={{ gap: 8 }}>
 						<Text className="text-xs font-body text-typography-500 dark:text-zinc-400">
 							<Trans id="onboarding.location.latitude">Latitude</Trans>
 						</Text>
@@ -181,7 +181,7 @@ export default function LocationScreen() {
 							className="rounded-2xl border border-outline-200 bg-white px-4 py-3 font-body text-base text-typography-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
 						/>
 					</View>
-				<View className="flex-1 flex flex-col" style={{ gap: 8 }}>
+					<View className="flex-1 flex flex-col" style={{ gap: 8 }}>
 						<Text className="text-xs font-body text-typography-500 dark:text-zinc-400">
 							<Trans id="onboarding.location.longitude">Longitude</Trans>
 						</Text>

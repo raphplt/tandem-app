@@ -1,14 +1,14 @@
-import { useEffect } from "react";
 import { Trans } from "@lingui/react/macro";
 import { useRouter } from "expo-router";
+import { useEffect } from "react";
 
-import { Text } from "react-native";
 import {
 	OnboardingGradientButton,
 	OnboardingShell,
 } from "@/components/onboarding";
 import { useOnboardingAnalytics } from "@/src/hooks/use-onboarding-analytics";
 import { useOnboardingDraft } from "@/src/hooks/use-onboarding-draft";
+import { Text } from "react-native";
 
 export default function WelcomeScreen() {
 	const router = useRouter();
@@ -28,9 +28,7 @@ export default function WelcomeScreen() {
 	return (
 		<OnboardingShell
 			title={
-				<Trans id="onboarding.welcome.postAuth.title">
-					Bienvenue dans Tandem.
-				</Trans>
+				<Trans id="onboarding.welcome.postAuth.title">Bienvenue dans Flint.</Trans>
 			}
 			subtitle={
 				<Trans id="onboarding.welcome.postAuth.subtitle">
@@ -40,9 +38,7 @@ export default function WelcomeScreen() {
 			footer={
 				<OnboardingGradientButton
 					label={
-						<Trans id="onboarding.welcome.postAuth.cta">
-							Continuer en douceur
-						</Trans>
+						<Trans id="onboarding.welcome.postAuth.cta">Continuer en douceur</Trans>
 					}
 					onPress={handleContinue}
 					accessibilityLabel="Continuer vers l’écran de synchronisation"

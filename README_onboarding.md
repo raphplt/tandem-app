@@ -1,4 +1,4 @@
-# Tandem Onboarding (Expo) — Implementation Notes
+# Flint Onboarding (Expo) — Implementation Notes
 
 ## Aperçu
 

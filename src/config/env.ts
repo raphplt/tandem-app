@@ -21,13 +21,13 @@ const baseURL = cleanedApiUrl?.replace(/\/api\/v1\/?$/, "") || "http://localhost
 
 export const env = {
 	baseURL,
-	authBaseURL: cleanUrl(process.env.EXPO_PUBLIC_AUTH_BASE_URL) ?? defaultAuthBaseURL,
+	authBaseURL:
+		cleanUrl(process.env.EXPO_PUBLIC_AUTH_BASE_URL) ?? defaultAuthBaseURL,
 	authStoragePrefix:
 		process.env.EXPO_PUBLIC_AUTH_STORAGE_PREFIX ??
 		extra?.eas?.projectId ??
-		expoConfig?.slug ??
-		"tandem",
-	appScheme: process.env.EXPO_PUBLIC_APP_SCHEME ?? fallbackScheme ?? "tandem",
+		expoConfig?.slug,
+	appScheme: process.env.EXPO_PUBLIC_APP_SCHEME ?? fallbackScheme ?? "flint",
 };
 
 

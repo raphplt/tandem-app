@@ -1,8 +1,8 @@
-import { useMemo, useState } from "react";
 import { Trans } from "@lingui/react/macro";
-import { useRouter } from "expo-router";
-import { Text, TextInput } from "react-native";
 import { format, parseISO } from "date-fns";
+import { useRouter } from "expo-router";
+import { useMemo, useState } from "react";
+import { Text, TextInput } from "react-native";
 
 import {
 	OnboardingGradientButton,
@@ -12,8 +12,8 @@ import {
 import { useOnboardingDraft } from "@/src/hooks/use-onboarding-draft";
 import { useOnboardingStep } from "@/src/hooks/use-onboarding-step";
 import { onboardingBirthdateSchema } from "@/src/lib/validations/onboarding";
-import { extractErrorMessage } from "@/src/utils/error";
 import { formatBirthdateInput } from "@/src/utils/date";
+import { extractErrorMessage } from "@/src/utils/error";
 
 export default function BirthdateScreen() {
 	const router = useRouter();
@@ -72,7 +72,7 @@ export default function BirthdateScreen() {
 			title={<Trans id="onboarding.birthdate.title">Ton anniversaire</Trans>}
 			subtitle={
 				<Trans id="onboarding.birthdate.subtitle">
-					Nous vérifions simplement que tu as au moins 18 ans pour rejoindre Tandem.
+					Nous vérifions simplement que tu as au moins 18 ans pour rejoindre Flint.
 				</Trans>
 			}
 			headerAccessory={<StepIndicator current={3} total={9} />}
@@ -91,9 +91,9 @@ export default function BirthdateScreen() {
 					Format JJ/MM/AAAA (ex : 14/07/1994)
 				</Trans>
 			</Text>
-	<TextInput
-		value={birthdateInput}
-		onChangeText={(value) => setBirthdateInput(formatBirthdateInput(value))}
+			<TextInput
+				value={birthdateInput}
+				onChangeText={(value) => setBirthdateInput(formatBirthdateInput(value))}
 				placeholder="JJ/MM/AAAA"
 				keyboardType="number-pad"
 				maxLength={10}

@@ -1,8 +1,8 @@
-# Système de Match et Conversations - Documentation Tandem
+# Système de Match et Conversations - Documentation Flint
 
 ## Vue d'ensemble
 
-Le système Tandem est conçu autour de deux concepts principaux :
+Le système Flint est conçu autour de deux concepts principaux :
 
 1. **Le système de Match** : Algorithme d'appariement quotidien basé sur la compatibilité
 2. **Le système de Conversations** : Échanges en temps réel via Socket.IO avec gestion de l'expiration

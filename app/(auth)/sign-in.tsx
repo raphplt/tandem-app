@@ -98,7 +98,7 @@ export default function SignInScreen() {
 				{draftId && draftToken ? (
 					<Text className="mb-4 text-sm text-zinc-600 dark:text-zinc-300">
 						<Trans id="auth.signIn.onboardingResume">
-							Connexion requise pour finaliser ton profil Tandem.
+							Connexion requise pour finaliser ton profil Flint.
 						</Trans>
 					</Text>
 				) : null}

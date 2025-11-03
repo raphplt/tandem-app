@@ -125,7 +125,7 @@ export default function GenderSeekingScreen() {
 			subtitle={
 				<Trans id="onboarding.genderSeeking.subtitle">
 					Sélectionne ton genre et les personnes avec lesquelles tu souhaites
-					partager un tandem.
+					partager un match.
 				</Trans>
 			}
 			headerAccessory={<StepIndicator current={2} total={9} />}

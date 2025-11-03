@@ -48,8 +48,8 @@ The app expects a Better Auth backend reachable at `EXPO_PUBLIC_AUTH_BASE_URL` (
 
 ```
 EXPO_PUBLIC_AUTH_BASE_URL=https://your-api.example.com/api/auth
-EXPO_PUBLIC_AUTH_STORAGE_PREFIX=tandem
-EXPO_PUBLIC_APP_SCHEME=tandem
+EXPO_PUBLIC_AUTH_STORAGE_PREFIX=flint
+EXPO_PUBLIC_APP_SCHEME=flint
 ```
 
 ## Join the community
