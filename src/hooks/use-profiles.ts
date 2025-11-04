@@ -1,14 +1,20 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/src/lib/api/client";
 import type {
 	CreateProfileDto,
 	ProfileResponseDto,
 	UpdateProfileDto,
 } from "@/types/profile";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 const PROFILES_KEY = ["profiles"];
 
-export function useMyProfile() {
+interface UseMyProfileOptions {
+	enabled?: boolean;
+}
+
+export function useMyProfile(options?: UseMyProfileOptions) {
+	const { enabled = true } = options ?? {};
+
 	return useQuery({
 		queryKey: [...PROFILES_KEY, "my"],
 		queryFn: async () => {
@@ -27,6 +33,7 @@ export function useMyProfile() {
 			}
 			return result.data;
 		},
+		enabled,
 	});
 }
 

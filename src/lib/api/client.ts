@@ -35,26 +35,29 @@ export async function apiFetch<T>(
     options: ApiRequestInit = {}
 ): Promise<{ data: T | null; error: ApiError | null }> {
     const { skipAuth, headers: initHeaders, ...fetchOptions } = options;
-    const url = `${API_BASE_URL}${endpoint}`;
+	const url = `${API_BASE_URL}${endpoint}`;
 
-    const headers: Record<string, string> = {
-        "Content-Type": "application/json",
-        ...((initHeaders as Record<string, string>) || {}),
-    };
+	const headers: Record<string, string> = {
+		"Content-Type": "application/json",
+		...((initHeaders as Record<string, string>) || {}),
+	};
 
-    if (!skipAuth) {
-        const session = getStoredSession();
-        const bearer = session?.sessionToken;
-        if (bearer) {
-            headers.Authorization = `Bearer ${bearer}`;
-        }
-    }
+	if (!skipAuth) {
+		// console.log("API Fetch - Auth:", { skipAuth });
+		const session = getStoredSession();
+		const bearer = session?.sessionToken;
+		if (bearer) {
+			headers.Authorization = `Bearer ${bearer}`;
+		}
+	}
 
 	try {
-        const response = await fetch(url, {
-            ...fetchOptions,
-            headers,
-        });
+		// console.log("API Fetch - Request:", { url, fetchOptions, headers });
+		const response = await fetch(url, {
+			...fetchOptions,
+			headers,
+		});
+		// console.log("API Fetch - Response:", { response });
 
 		if (!response.ok) {
 			const errorData = await response.json().catch(() => ({
@@ -62,7 +65,6 @@ export async function apiFetch<T>(
 				message: response.statusText,
 				error: "Error",
 			}));
-
 			return {
 				data: null,
 				error: errorData as ApiError,

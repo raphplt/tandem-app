@@ -14,7 +14,14 @@ export default function HomeGateScreen() {
 	const { data: session, isLoading: isSessionLoading } = useAuthSession();
 	const resetDraft = useOnboardingDraft((state) => state.reset);
 	const { trackContinue } = useOnboardingStep("home-gate");
-	const { data: profile, isLoading, refetch, isError } = useMyProfile();
+	const {
+		data: profile,
+		isLoading,
+		refetch,
+		isError,
+	} = useMyProfile({
+		enabled: !!session?.sessionToken && !isSessionLoading,
+	});
 
 	useEffect(() => {
 		if (!isSessionLoading && !session) {
@@ -24,8 +31,8 @@ export default function HomeGateScreen() {
 
 	useEffect(() => {
 		if (!profile) return;
-		resetDraft();
 		trackContinue();
+		resetDraft();
 		router.replace("/(tabs)");
 	}, [profile, resetDraft, router, trackContinue]);
 

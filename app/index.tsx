@@ -18,7 +18,9 @@ export default function Index() {
 		data: profile,
 		isLoading: isProfileLoading,
 		isFetching: isProfileFetching,
-	} = useMyProfile();
+	} = useMyProfile({
+		enabled: !!session?.sessionToken && !isAuthLoading && !isAuthRefetching,
+	});
 
 	const isLoading =
 		isAuthLoading || isAuthRefetching || isProfileLoading || isProfileFetching;
