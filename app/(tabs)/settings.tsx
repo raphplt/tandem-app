@@ -5,8 +5,9 @@ import { useAuthActions } from "@/hooks/use-auth-actions";
 import { useAuthSession } from "@/hooks/use-auth-session";
 import { useLocale } from "@/hooks/use-locale";
 import { useThemeStore, type ThemeMode } from "@/hooks/use-theme-store";
+import { useMyProfile } from "@/src/hooks/use-profiles";
 import { Trans } from "@lingui/react/macro";
-import { Text, TouchableOpacity, View } from "react-native";
+import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function SettingsScreen() {
@@ -24,6 +25,10 @@ export default function SettingsScreen() {
 	const handleLocaleChange = (newLocale: "en" | "fr") => {
 		changeLocale(newLocale);
 	};
+
+	const { data: profile } = useMyProfile();
+
+	console.log("SettingsScreen - Profile:", { profile });
 
 	const themeOptions = [
 		{
@@ -62,9 +67,13 @@ export default function SettingsScreen() {
 
 	return (
 		<SafeAreaView className="flex-1  p-6">
-			<View>
+			<ScrollView>
 				<Text className="text-3xl font-bold text-gray-800 dark:text-gray-200 mb-8">
 					<Trans id="settings-screen.title">Settings</Trans>
+				</Text>
+
+				<Text className="text-lg font-medium text-gray-600 dark:text-gray-400 mb-6">
+					{JSON.stringify(profile, null, 2)}
 				</Text>
 
 				{session?.user && (
@@ -86,7 +95,7 @@ export default function SettingsScreen() {
 					<Text className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4">
 						<Trans id="settings-screen.language">Language</Trans>
 					</Text>
-				<View className="flex flex-col" style={{ gap: 8 }}>
+					<View className="flex flex-col" style={{ gap: 8 }}>
 						{localeOptions.map((option) => (
 							<TouchableOpacity
 								key={option.value}
@@ -116,7 +125,7 @@ export default function SettingsScreen() {
 					<Text className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4">
 						<Trans id="settings-screen.theme">Theme</Trans>
 					</Text>
-			<View className="flex flex-col" style={{ gap: 8 }}>
+					<View className="flex flex-col" style={{ gap: 8 }}>
 						{themeOptions.map((option) => (
 							<TouchableOpacity
 								key={option.value}
@@ -154,7 +163,7 @@ export default function SettingsScreen() {
 						)}
 					</Text>
 				</TouchableOpacity>
-			</View>
+			</ScrollView>
 		</SafeAreaView>
 	);
 }
