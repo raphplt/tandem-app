@@ -156,7 +156,11 @@ export default function GenderSeekingScreen() {
 										: "border-outline-200 bg-white dark:border-zinc-700 dark:bg-zinc-900"
 								}`}
 							>
-								<Text className="text-base font-semibold text-typography-900 dark:text-zinc-100">
+								<Text
+									className={`text-base font-semibold text-typography-900 dark:text-zinc-100 ${
+										selected ? "dark:text-typography-600" : ""
+									}`}
+								>
 									{choice.label}
 								</Text>
 								<Text className="mt-1 text-sm font-body text-typography-500 dark:text-zinc-400">
