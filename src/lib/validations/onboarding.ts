@@ -4,25 +4,23 @@ import { z } from "zod";
 import { Gender } from "@/types/user";
 
 export const MIN_ONBOARDING_AGE = 18;
-export const MAX_ONBOARDING_AGE = 90;
+export const MAX_ONBOARDING_AGE = 80;
 export const MAX_DISTANCE_KM = 500;
-export const MIN_DISTANCE_KM = 1;
+export const MIN_DISTANCE_KM = 10;
 export const MAX_INTERESTS = 5;
 export const MIN_INTERESTS = 1;
 export const MAX_BIO_LENGTH = 240;
 
 export const onboardingFirstNameSchema = z.object({
 	firstName: z
-		.string({ required_error: "Ton prénom est requis" })
+		.string({ error: "Ton prénom est requis" })
 		.trim()
 		.min(1, "Ton prénom est requis")
 		.max(50, "Ton prénom ne peut pas dépasser 50 caractères"),
 });
 
 export const onboardingGenderSeekingSchema = z.object({
-	gender: z.nativeEnum(Gender, {
-		errorMap: () => ({ message: "Sélectionne ton genre" }),
-	}),
+	gender: z.nativeEnum(Gender, { error: "Sélectionne ton genre" }),
 	seeking: z
 		.array(z.nativeEnum(Gender))
 		.min(1, "Choisis au moins une préférence")
@@ -30,7 +28,7 @@ export const onboardingGenderSeekingSchema = z.object({
 });
 
 const birthdateTransform = z
-	.string({ required_error: "Renseigne ta date de naissance" })
+	.string({ error: "Renseigne ta date de naissance" })
 	.trim()
 	.refine((value) => {
 		const parsed = parse(value, "dd/MM/yyyy", new Date());
@@ -62,20 +60,20 @@ export const onboardingBirthdateSchema = z.object({
 
 export const onboardingLocationSchema = z.object({
 	city: z
-		.string({ required_error: "Indique ta ville" })
+		.string({ error: "Indique ta ville" })
 		.trim()
 		.min(2, "Indique ta ville"),
 	country: z
-		.string({ required_error: "Indique ton pays" })
+		.string({ error: "Indique ton pays" })
 		.trim()
 		.min(2, "Indique ton pays"),
 	coords: z
 		.object({
 			latitude: z
-				.number({ invalid_type_error: "Latitude invalide" })
+				.number({ error: "Latitude invalide" })
 				.refine((value) => Math.abs(value) <= 90, "Latitude invalide"),
 			longitude: z
-				.number({ invalid_type_error: "Longitude invalide" })
+				.number({ error: "Longitude invalide" })
 				.refine((value) => Math.abs(value) <= 180, "Longitude invalide"),
 		})
 		.optional(),
@@ -84,17 +82,17 @@ export const onboardingLocationSchema = z.object({
 export const onboardingPreferencesSchema = z
 	.object({
 		ageMin: z
-			.number({ invalid_type_error: "Âge minimum invalide" })
+			.number({ error: "Âge minimum invalide" })
 			.int()
 			.min(MIN_ONBOARDING_AGE, `Âge minimum ${MIN_ONBOARDING_AGE}+`) 
 			.max(MAX_ONBOARDING_AGE, `Âge maximum ${MAX_ONBOARDING_AGE}`),
 		ageMax: z
-			.number({ invalid_type_error: "Âge maximum invalide" })
+			.number({ error: "Âge maximum invalide" })
 			.int()
 			.min(MIN_ONBOARDING_AGE, `Âge maximum ${MIN_ONBOARDING_AGE}+`) 
 			.max(MAX_ONBOARDING_AGE, `Âge maximum ${MAX_ONBOARDING_AGE}`),
 		distanceKm: z
-			.number({ invalid_type_error: "Distance invalide" })
+			.number({ error: "Distance invalide" })
 			.int()
 			.min(MIN_DISTANCE_KM, `Distance min ${MIN_DISTANCE_KM} km`)
 			.max(MAX_DISTANCE_KM, `Distance max ${MAX_DISTANCE_KM} km`),
@@ -113,9 +111,8 @@ export const onboardingInterestsSchema = z.object({
 
 export const onboardingBioSchema = z.object({
 	bio: z
-		.string({ required_error: "Écris une courte bio" })
+		.string({ error: "Écris une courte bio" })
 		.trim()
 		.min(10, "Écris quelques lignes pour te présenter")
 		.max(MAX_BIO_LENGTH, `Maximum ${MAX_BIO_LENGTH} caractères`),
 });
-
