@@ -273,9 +273,9 @@ export default function SettingsScreen() {
 			className={`mb-6 rounded-3xl border px-5 py-6 ${(() => {
 				switch (tone) {
 					case "gold":
-						return "border-accentGold-200 bg-accentGold-50/80 dark:border-accentGold-800/60 dark:bg-accentGold-950/40";
+						return "border-accentGold-200 bg-accentGold-50/80 dark:border-accentGold-800/60 dark:bg-accentGold-900/30";
 					case "rose":
-						return "border-accentRose-200 bg-accentRose-50/80 dark:border-accentRose-800/60 dark:bg-accentRose-950/40";
+						return "border-accentRose-200 bg-accentRose-50/80 dark:border-accentRose-800/60 dark:bg-accentRose-900/30";
 					default:
 						return "border-outline-100 bg-white/95 dark:border-outline-800 dark:bg-zinc-900/85";
 				}
@@ -346,10 +346,13 @@ export default function SettingsScreen() {
 					<Trans id="settings-screen.title">Profil & paramètres</Trans>
 				</Text>
 
-				<Box className="mb-8 rounded-3xl border border-outline-100 bg-secondary-50 px-6 py-8 dark:border-outline-800 dark:bg-primary-900/50">
-					<View className="flex-row items-start justify-between">
-						<View className="flex-row items-center gap-4">
-							<View className="h-20 w-20 items-center justify-center overflow-hidden rounded-full border-2 border-primary-500 bg-white dark:border-primary-400 dark:bg-zinc-900">
+				<Box className="relative mb-8 overflow-hidden rounded-3xl border border-accentGold-200 bg-accentGold-50/80 px-6 py-8 dark:border-accentGold-800 dark:bg-accentGold-900/30">
+					<View className="pointer-events-none absolute -right-10 -top-12 h-32 w-32 rounded-full bg-accentRose-200/60 dark:bg-accentRose-800/40" />
+					<View className="pointer-events-none absolute -bottom-14 left-8 h-28 w-28 rounded-full bg-accentGold-200/50 dark:bg-accentGold-800/40" />
+					<View className="relative z-10">
+						<View className="flex-row items-start justify-between">
+							<View className="flex-row items-center gap-4">
+								<View className="h-20 w-20 items-center justify-center overflow-hidden rounded-full border-2 border-accentGold-400 bg-white dark:border-accentGold-600 dark:bg-zinc-900">
 								{profile?.photoUrl ? (
 									<Image
 										source={{ uri: profile.photoUrl }}
@@ -357,7 +360,7 @@ export default function SettingsScreen() {
 										contentFit="cover"
 									/>
 								) : (
-									<Text className="text-xl font-semibold text-primary-500 dark:text-secondary-0">
+									<Text className="text-xl font-semibold text-accentGold-700 dark:text-accentGold-200">
 										{initials}
 									</Text>
 								)}
@@ -373,11 +376,11 @@ export default function SettingsScreen() {
 						</View>
 						<TouchableOpacity
 							onPress={() => router.push("/(onboarding)/photos" as never)}
-							className="rounded-full border border-outline-200 bg-white/70 px-4 py-2 dark:border-outline-700 dark:bg-zinc-900"
+							className="rounded-full border border-accentRose-400 bg-accentRose-100/80 px-4 py-2 dark:border-accentRose-700 dark:bg-accentRose-900/30"
 						>
 							<View className="flex-row items-center gap-2">
-								<PencilSimpleLine size={18} color="#4B5563" weight="bold" />
-								<Text className="text-sm font-medium text-typography-700 dark:text-typography-200">
+								<PencilSimpleLine size={18} color="#7A2742" weight="bold" />
+								<Text className="text-sm font-medium text-accentRose-700 dark:text-accentRose-200">
 									<Trans id="settings-screen.update-photo">Modifier</Trans>
 								</Text>
 							</View>
@@ -386,22 +389,22 @@ export default function SettingsScreen() {
 
 					<View className="mt-6 flex-row flex-wrap gap-3">
 						{profile?.age ? (
-							<View className="rounded-full bg-white px-4 py-1.5 dark:bg-zinc-800">
-								<Text className="text-xs font-semibold text-typography-700 dark:text-typography-200">
+							<View className="rounded-full bg-accentGold-100/80 px-4 py-1.5 dark:bg-accentGold-900/30">
+								<Text className="text-xs font-semibold text-accentGold-700 dark:text-accentGold-200">
 									{profile.age} <Trans id="settings-screen.years">ans</Trans>
 								</Text>
 							</View>
 						) : null}
 						{profile?.city ? (
-							<View className="rounded-full bg-white px-4 py-1.5 dark:bg-zinc-800">
-								<Text className="text-xs font-semibold text-typography-700 dark:text-typography-200">
+							<View className="rounded-full bg-accentRose-100/80 px-4 py-1.5 dark:bg-accentRose-900/30">
+								<Text className="text-xs font-semibold text-accentRose-700 dark:text-accentRose-200">
 									{profile.city}
 								</Text>
 							</View>
 						) : null}
 						{profile?.country ? (
-							<View className="rounded-full bg-white px-4 py-1.5 dark:bg-zinc-800">
-								<Text className="text-xs font-semibold text-typography-700 dark:text-typography-200">
+							<View className="rounded-full bg-accentGold-100/60 px-4 py-1.5 dark:bg-accentGold-900/30">
+								<Text className="text-xs font-semibold text-accentGold-700 dark:text-accentGold-200">
 									{profile.country}
 								</Text>
 							</View>
@@ -414,22 +417,43 @@ export default function SettingsScreen() {
 						</Text>
 					) : null}
 
-					<View className="mt-6 flex-row justify-between">
+					<View className="mt-6 flex-row justify-between gap-3">
 						{stats.map((item) => (
-							<View key={item.key} className="flex-1 items-center">
-								<Text className="text-xl font-semibold text-typography-900 dark:text-typography-50">
+							<View
+								key={item.key}
+								className={`flex-1 items-center rounded-2xl border px-4 py-3 ${
+									item.tone === "rose"
+										? "border-accentRose-200 bg-accentRose-50/80 dark:border-accentRose-800/60 dark:bg-accentRose-900/30"
+										: "border-accentGold-200 bg-accentGold-50/80 dark:border-accentGold-800/60 dark:bg-accentGold-900/30"
+								}`}
+							>
+								<Text
+									className={`text-xl font-semibold ${
+										item.tone === "rose"
+											? "text-accentRose-700 dark:text-accentRose-200"
+											: "text-accentGold-700 dark:text-accentGold-200"
+									}`}
+								>
 									{item.value}
 								</Text>
-								<Text className="text-xs uppercase tracking-wide text-typography-500 dark:text-typography-300">
+								<Text
+									className={`text-xs uppercase tracking-wide ${
+										item.tone === "rose"
+											? "text-accentRose-600 dark:text-accentRose-300"
+											: "text-accentGold-600 dark:text-accentGold-300"
+									}`}
+								>
 									{item.label}
 								</Text>
 							</View>
 						))}
 					</View>
+					</View>
 				</Box>
 
 				<MenuGroup
 					title={<Trans id="settings-screen.section.account">Compte</Trans>}
+					tone="gold"
 					description={
 						<Trans id="settings-screen.section.account.description">
 							Garde ton profil à jour et gère tes paramètres Tandem.
@@ -439,6 +463,7 @@ export default function SettingsScreen() {
 				/>
 
 				<MenuGroup
+					tone="rose"
 					title={
 						<Trans id="settings-screen.section.personalization">
 							Personnalisation
@@ -452,8 +477,8 @@ export default function SettingsScreen() {
 				>
 					<View className="flex-col gap-3">
 						<View className="flex-row items-center gap-3">
-							<View className="rounded-2xl bg-secondary-100 p-3 dark:bg-primary-800">
-								<Globe size={20} color="#737373" weight="bold" />
+							<View className="rounded-2xl border border-accentGold-200/60 bg-accentGold-100/80 p-3 dark:border-accentGold-800/60 dark:bg-accentGold-900/30">
+								<Globe size={20} color="#9A6A00" weight="bold" />
 							</View>
 							<View className="flex-1">
 								<Text className="text-base font-semibold text-typography-900 dark:text-typography-50">
@@ -466,14 +491,15 @@ export default function SettingsScreen() {
 											label={option.label}
 											isActive={locale === option.value}
 											onPress={() => handleLocaleChange(option.value)}
+											tone="gold"
 										/>
 									))}
 								</View>
 							</View>
 						</View>
 						<View className="flex-row items-center gap-3">
-							<View className="rounded-2xl bg-secondary-100 p-3 dark:bg-primary-800">
-								<Palette size={20} color="#737373" weight="bold" />
+							<View className="rounded-2xl border border-accentRose-200/60 bg-accentRose-100/80 p-3 dark:border-accentRose-800/60 dark:bg-accentRose-900/30">
+								<Palette size={20} color="#7A2742" weight="bold" />
 							</View>
 							<View className="flex-1">
 								<Text className="text-base font-semibold text-typography-900 dark:text-typography-50">
@@ -486,6 +512,7 @@ export default function SettingsScreen() {
 											label={option.label}
 											isActive={mode === option.value}
 											onPress={() => handleThemeChange(option.value)}
+											tone="rose"
 										/>
 									))}
 								</View>
@@ -495,6 +522,7 @@ export default function SettingsScreen() {
 				</MenuGroup>
 
 				<MenuGroup
+					tone="rose"
 					title={<Trans id="settings-screen.section.support">Aide & support</Trans>}
 					description={
 						<Trans id="settings-screen.section.support.description">
