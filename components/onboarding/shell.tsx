@@ -41,7 +41,7 @@ export function OnboardingShell({
 				}}
 				keyboardShouldPersistTaps="handled"
 			>
-				<View className="flex-1 justify-between px-6 py-16">
+				<View className="flex-1 justify-between px-6 py-20">
 					<View className="flex flex-col" style={{ gap: 32 }}>
 						<View className="flex flex-col" style={{ gap: 24 }}>
 							<View className="flex-row items-center justify-between">

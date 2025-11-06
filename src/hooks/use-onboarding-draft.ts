@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
+import { createJSONStorage, persist } from "zustand/middleware";
 
 import {
 	fetchOnboardingDraft,
@@ -55,10 +55,13 @@ type OnboardingDraftState = ReturnType<typeof createInitialState> & {
 	ensureDeviceId: () => string;
 	reset: () => void;
 	mergeRemoteDraft: (record: OnboardingDraftRecord) => void;
-	loadRemoteDraft: (params: { deviceId: string; draftToken?: string }) => Promise<
-		OnboardingDraftRecord | null
-	>;
-	saveDraft: (payload?: OnboardingDraftPayload) => Promise<OnboardingDraftRecord>;
+	loadRemoteDraft: (params: {
+		deviceId: string;
+		draftToken?: string;
+	}) => Promise<OnboardingDraftRecord | null>;
+	saveDraft: (
+		payload?: OnboardingDraftPayload
+	) => Promise<OnboardingDraftRecord>;
 	syncPhotosWithRemote: (remoteUrls: string[]) => Promise<OnboardingDraftRecord>;
 };
 
@@ -83,9 +86,7 @@ const toPayload = (state: OnboardingDraftState): OnboardingDraftPayload => {
 		const { coords, ...restProfile } = profile;
 		const profilePayload: OnboardingProfilePayload = {
 			...restProfile,
-			...(coords
-				? { lat: coords.latitude, lng: coords.longitude }
-				: {}),
+			...(coords ? { lat: coords.latitude, lng: coords.longitude } : {}),
 		};
 		payload.profile = profilePayload;
 	}
@@ -173,22 +174,57 @@ export const useOnboardingDraft = create<OnboardingDraftState>()(
 					deviceId: state.deviceId,
 				})),
 			mergeRemoteDraft: (record) =>
-				set({
-					deviceId: record.deviceId ?? get().deviceId ?? generateDeviceId(),
-					draftId: record.draftId,
-					draftToken: record.draftToken,
-					expiresAt: record.expiresAt,
-					profile: {
-						...get().profile,
-						...mapRemoteProfile(record.payload.profile),
-					},
-					preferences: {
-						...get().preferences,
-						...(record.payload.preferences ?? {}),
-					},
-					interests: record.payload.interests ?? get().interests,
-					photos: mapRemotePhotos(record.payload.photos),
-					hydratedFromRemote: true,
+				set((state) => {
+					const remotePhotos = mapRemotePhotos(record.payload.photos);
+					const remoteUrls = new Set(
+						remotePhotos
+							.map((photo) => photo.remoteUrl)
+							.filter((url): url is string => Boolean(url))
+					);
+
+					// Preserve local photos that are still uploading or not yet mirrored remotely.
+					const preservedPhotos = state.photos.filter((photo) => {
+						if (photo.status !== "uploaded") return true;
+						if (!photo.remoteUrl) return true;
+						return !remoteUrls.has(photo.remoteUrl);
+					});
+
+					const mergedUploaded = remotePhotos.map((remotePhoto) => {
+						const previous = state.photos.find(
+							(photo) => photo.remoteUrl && photo.remoteUrl === remotePhoto.remoteUrl
+						);
+
+						if (!previous) {
+							return remotePhoto;
+						}
+
+						return {
+							...previous,
+							...remotePhoto,
+							id: previous.id,
+							localUri: previous.localUri ?? remotePhoto.remoteUrl,
+							contentType: previous.contentType,
+							errorMessage: undefined,
+						};
+					});
+
+					return {
+						deviceId: record.deviceId ?? state.deviceId ?? generateDeviceId(),
+						draftId: record.draftId,
+						draftToken: record.draftToken,
+						expiresAt: record.expiresAt,
+						profile: {
+							...state.profile,
+							...mapRemoteProfile(record.payload.profile),
+						},
+						preferences: {
+							...state.preferences,
+							...(record.payload.preferences ?? {}),
+						},
+						interests: record.payload.interests ?? state.interests,
+						photos: [...preservedPhotos, ...mergedUploaded],
+						hydratedFromRemote: true,
+					};
 				}),
 			loadRemoteDraft: async ({ deviceId, draftToken }) => {
 				try {

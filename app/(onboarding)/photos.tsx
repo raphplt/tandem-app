@@ -3,7 +3,14 @@ import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
-import { ActivityIndicator, Alert, Pressable, Text, View } from "react-native";
+import {
+	ActivityIndicator,
+	Alert,
+	Modal,
+	Pressable,
+	Text,
+	View,
+} from "react-native";
 
 import {
 	OnboardingGradientButton,
@@ -26,6 +33,7 @@ export default function PhotosScreen() {
 		usePresignUpload();
 	const [error, setError] = useState<string | null>(null);
 	const [loading, setLoading] = useState(false);
+	const [previewPhotoUri, setPreviewPhotoUri] = useState<string | null>(null);
 
 	const uploadedPhotos = useMemo(
 		() =>
@@ -84,6 +92,14 @@ export default function PhotosScreen() {
 		[removePhoto]
 	);
 
+	const handleOpenPreview = useCallback((uri: string) => {
+		setPreviewPhotoUri(uri);
+	}, []);
+
+	const handleClosePreview = useCallback(() => {
+		setPreviewPhotoUri(null);
+	}, []);
+
 	const handleContinue = async () => {
 		setError(null);
 		setLoading(true);
@@ -135,14 +151,21 @@ export default function PhotosScreen() {
 				{photos.map((photo) => {
 					const isUploading = photo.status === "uploading";
 					const hasError = photo.status === "error";
+					const photoUri = photo.localUri ?? photo.remoteUrl;
 					return (
-						<View
+						<Pressable
 							key={photo.id}
+							onPress={() => {
+								if (photoUri) {
+									handleOpenPreview(photoUri);
+								}
+							}}
+							disabled={!photoUri}
 							className="relative h-32 w-24 overflow-hidden rounded-3xl border border-outline-200 bg-secondary-0 dark:border-zinc-700 dark:bg-zinc-900"
 						>
-							{photo.localUri || photo.remoteUrl ? (
+							{photoUri ? (
 								<Image
-									source={{ uri: photo.localUri ?? photo.remoteUrl }}
+									source={{ uri: photoUri }}
 									style={{ width: "100%", height: "100%" }}
 									contentFit="cover"
 								/>
@@ -152,7 +175,12 @@ export default function PhotosScreen() {
 								<View className="absolute inset-0 items-center justify-center bg-black/40">
 									{isUploading ? <ActivityIndicator color="#fff" /> : null}
 									{hasError ? (
-										<Pressable onPress={() => retryPhotoUpload(photo.id)}>
+										<Pressable
+											onPress={(event) => {
+												event.stopPropagation();
+												retryPhotoUpload(photo.id);
+											}}
+										>
 											<Text className="text-center text-xs font-semibold text-white">
 												<Trans id="onboarding.photos.retry">Réessayer</Trans>
 											</Text>
@@ -163,7 +191,10 @@ export default function PhotosScreen() {
 
 							{!isUploading ? (
 								<Pressable
-									onPress={() => handleRemove(photo.id)}
+									onPress={(event) => {
+										event.stopPropagation();
+										handleRemove(photo.id);
+									}}
 									className="absolute right-2 top-2 rounded-full bg-black/60 px-2 py-1"
 								>
 									<Text className="text-xs font-semibold text-white">
@@ -171,7 +202,7 @@ export default function PhotosScreen() {
 									</Text>
 								</Pressable>
 							) : null}
-						</View>
+						</Pressable>
 					);
 				})}
 
@@ -199,6 +230,31 @@ export default function PhotosScreen() {
 				<Text className="text-sm font-body text-error-500" role="alert">
 					{error}
 				</Text>
+			) : null}
+
+			{previewPhotoUri ? (
+				<Modal
+					visible
+					transparent
+					animationType="fade"
+					onRequestClose={handleClosePreview}
+				>
+					<Pressable
+						onPress={handleClosePreview}
+						className="flex-1 items-center justify-center bg-black/90 px-6"
+					>
+						<Image
+							source={{ uri: previewPhotoUri }}
+							style={{ width: "100%", height: "80%" }}
+							contentFit="contain"
+						/>
+						<Text className="mt-4 text-base font-semibold text-white">
+							<Trans id="onboarding.photos.preview.close">
+								Appuie n&apos;importe où pour fermer
+							</Trans>
+						</Text>
+					</Pressable>
+				</Modal>
 			) : null}
 		</OnboardingShell>
 	);

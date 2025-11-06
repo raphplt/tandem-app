@@ -20,8 +20,7 @@ import {
 } from "@/src/lib/validations/onboarding";
 import { extractErrorMessage } from "@/src/utils/error";
 
-/** ========= Helpers centrés ========= */
-const THUMB_SIZE = 36; // h-9 w-9
+const THUMB_SIZE = 36;
 const HALF_THUMB = THUMB_SIZE / 2;
 
 const clampValue = (v: number, min: number, max: number) =>
@@ -32,7 +31,7 @@ const valueToX = (value: number, min: number, max: number, trackW: number) => {
 	if (!trackW || range <= 0) return HALF_THUMB;
 	const usable = Math.max(trackW - THUMB_SIZE, 1);
 	const ratio = (value - min) / range;
-	return ratio * usable + HALF_THUMB; // position du CENTRE
+	return ratio * usable + HALF_THUMB;
 };
 
 const xToValue = (x: number, min: number, max: number, trackW: number) => {
@@ -86,7 +85,6 @@ export default function PrefsAgeDistanceScreen() {
 	const ageMaxStartValue = useRef(ageRange[1]);
 	const distanceStartValue = useRef(distanceKm);
 
-	/** ========= Drag (delta basé sur largeur utile) ========= */
 	const ageMinPanResponder = useMemo(
 		() =>
 			PanResponder.create({
@@ -154,7 +152,6 @@ export default function PrefsAgeDistanceScreen() {
 		[distanceRange, distanceSliderWidth]
 	);
 
-	/** ========= Tap (x -> value centré) ========= */
 	const handleAgeTrackPress = (e: GestureResponderEvent) => {
 		if (!ageSliderWidth) return;
 		const value = xToValue(
@@ -223,7 +220,6 @@ export default function PrefsAgeDistanceScreen() {
 		}
 	};
 
-	/** ========= Positions (centres) ========= */
 	const xAgeMin = valueToX(
 		ageRange[0],
 		MIN_ONBOARDING_AGE,
@@ -235,12 +231,6 @@ export default function PrefsAgeDistanceScreen() {
 		MIN_ONBOARDING_AGE,
 		MAX_ONBOARDING_AGE,
 		ageSliderWidth
-	);
-	const xDistance = valueToX(
-		distanceKm,
-		MIN_DISTANCE_KM,
-		MAX_DISTANCE_KM,
-		distanceSliderWidth
 	);
 
 	const hit = { top: 12, bottom: 12, left: 12, right: 12 } as const;
@@ -268,7 +258,6 @@ export default function PrefsAgeDistanceScreen() {
 				/>
 			}
 		>
-			{/* ====== AGE ====== */}
 			<View className="flex flex-col" style={{ gap: 8 }}>
 				<Text className="text-sm font-body text-typography-500 dark:text-zinc-400">
 					<Trans id="onboarding.preferences.ageRange">
@@ -309,12 +298,10 @@ export default function PrefsAgeDistanceScreen() {
 							onLayout={(e) => setAgeSliderWidth(e.nativeEvent.layout.width)}
 							style={{ justifyContent: "center" }}
 						>
-							{/* Track */}
 							<View className="h-2 rounded-full bg-outline-200 dark:bg-zinc-700" />
 
 							{ageSliderWidth > 0 ? (
 								<>
-									{/* Segment actif (centre -> centre) */}
 									<View
 										className="absolute top-1/2 h-2 overflow-hidden rounded-full"
 										style={{
@@ -332,7 +319,6 @@ export default function PrefsAgeDistanceScreen() {
 										/>
 									</View>
 
-									{/* Thumb MIN – conteneur = EXACTEMENT le thumb */}
 									<View
 										className="absolute"
 										style={{
@@ -347,7 +333,6 @@ export default function PrefsAgeDistanceScreen() {
 										}}
 										{...ageMinPanResponder.panHandlers}
 									>
-										{/* Label au-dessus du thumb, n'affecte pas le centrage */}
 										<View
 											pointerEvents="none"
 											style={{
@@ -372,7 +357,6 @@ export default function PrefsAgeDistanceScreen() {
 										</View>
 									</View>
 
-									{/* Thumb MAX */}
 									<View
 										className="absolute"
 										style={{
@@ -426,7 +410,6 @@ export default function PrefsAgeDistanceScreen() {
 				</View>
 			</View>
 
-			{/* ====== DISTANCE ====== */}
 			<View className="flex flex-col" style={{ gap: 8 }}>
 				<Text className="text-sm font-body text-typography-500 dark:text-zinc-400">
 					<Trans id="onboarding.preferences.distance">Distance maximale (km)</Trans>
@@ -461,12 +444,10 @@ export default function PrefsAgeDistanceScreen() {
 							onLayout={(e) => setDistanceSliderWidth(e.nativeEvent.layout.width)}
 							style={{ justifyContent: "center" }}
 						>
-							{/* Track */}
 							<View className="h-2 rounded-full bg-outline-200 dark:bg-zinc-700" />
 
 							{distanceSliderWidth > 0 ? (
 								<>
-									{/* Segment actif du bord jusqu'au CENTRE */}
 									<View
 										className="absolute top-1/2 h-2 overflow-hidden rounded-full"
 										style={{
@@ -492,7 +473,6 @@ export default function PrefsAgeDistanceScreen() {
 										/>
 									</View>
 
-									{/* Thumb DISTANCE (conteneur = THUMB_SIZE) */}
 									<View
 										className="absolute"
 										style={{
