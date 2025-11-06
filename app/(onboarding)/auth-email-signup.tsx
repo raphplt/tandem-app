@@ -1,13 +1,15 @@
-import { useMemo, useState } from "react";
 import { Trans } from "@lingui/react/macro";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Text, TextInput } from "react-native";
+import { Eye, EyeSlash } from "phosphor-react-native";
+import { useMemo, useState } from "react";
+import { Text, useColorScheme } from "react-native";
 
 import {
 	OnboardingGradientButton,
 	OnboardingShell,
 	StepIndicator,
 } from "@/components/onboarding";
+import { Input, InputField, InputIcon, InputSlot } from "@/components/ui/input";
 import { useAuthActions } from "@/hooks/use-auth-actions";
 import { useOnboardingAnalytics } from "@/src/hooks/use-onboarding-analytics";
 import { useOnboardingDraft } from "@/src/hooks/use-onboarding-draft";
@@ -23,14 +25,18 @@ export default function AuthEmailSignupScreen() {
 	const onboardingProfile = useOnboardingDraft((state) => state.profile);
 	const { signUp } = useAuthActions();
 	const { trackContinue } = useOnboardingStep("auth-email");
-const { trackAuthSuccess } = useOnboardingAnalytics();
+	const { trackAuthSuccess } = useOnboardingAnalytics();
 
 	const [email, setEmail] = useState("");
 	const [lastName, setLastName] = useState("");
 	const [password, setPassword] = useState("");
 	const [confirmPassword, setConfirmPassword] = useState("");
+	const [passwordVisible, setPasswordVisible] = useState(false);
+	const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [loading, setLoading] = useState(false);
+	const colorScheme = useColorScheme();
+	const passwordIconColor = colorScheme === "dark" ? "#d4d4d8" : "#6b7280";
 
 	const isButtonDisabled = useMemo(() => {
 		return (
@@ -72,9 +78,7 @@ const { trackAuthSuccess } = useOnboardingAnalytics();
 	return (
 		<OnboardingShell
 			title={
-				<Trans id="onboarding.auth.email.title">
-					Finalise ton compte Tandem
-				</Trans>
+				<Trans id="onboarding.auth.email.title">Finalise ton compte Tandem</Trans>
 			}
 			subtitle={
 				<Trans id="onboarding.auth.email.subtitle">
@@ -98,46 +102,80 @@ const { trackAuthSuccess } = useOnboardingAnalytics();
 				</Trans>
 			</Text>
 
-			<TextInput
-				value={email}
-				onChangeText={setEmail}
-				autoCapitalize="none"
-				autoComplete="email"
-				keyboardType="email-address"
-				placeholder="email@example.com"
-				placeholderTextColor="#9ca3af"
-				className="rounded-2xl border border-outline-200 bg-white px-4 py-3 font-body text-base text-typography-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
-			/>
+			<Input accessibilityLabel="Saisis ton email">
+				<InputField
+					value={email}
+					onChangeText={setEmail}
+					autoCapitalize="none"
+					autoComplete="email"
+					keyboardType="email-address"
+					placeholder="email@example.com"
+				/>
+			</Input>
 
-			<TextInput
-				value={lastName}
-				onChangeText={setLastName}
-				autoCapitalize="words"
-				autoComplete="name"
-				placeholder="Ton nom"
-				placeholderTextColor="#9ca3af"
-				className="rounded-2xl border border-outline-200 bg-white px-4 py-3 font-body text-base text-typography-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
-			/>
+			<Input accessibilityLabel="Saisis ton nom">
+				<InputField
+					value={lastName}
+					onChangeText={setLastName}
+					autoCapitalize="words"
+					autoComplete="name"
+					placeholder="Ton nom"
+				/>
+			</Input>
 
-			<TextInput
-				value={password}
-				onChangeText={setPassword}
-				secureTextEntry
-				autoComplete="password-new"
-				placeholder="Mot de passe"
-				placeholderTextColor="#9ca3af"
-				className="rounded-2xl border border-outline-200 bg-white px-4 py-3 font-body text-base text-typography-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
-			/>
+			<Input accessibilityLabel="Choisis un mot de passe">
+				<InputField
+					value={password}
+					onChangeText={setPassword}
+					secureTextEntry={!passwordVisible}
+					autoComplete="password-new"
+					textContentType="newPassword"
+					placeholder="Mot de passe"
+				/>
+				<InputSlot
+					onPress={() => setPasswordVisible((prev) => !prev)}
+					hitSlop={10}
+					accessibilityLabel={
+						passwordVisible ? "Masquer le mot de passe" : "Afficher le mot de passe"
+					}
+				>
+					<InputIcon>
+						{passwordVisible ? (
+							<EyeSlash size={22} color={passwordIconColor} />
+						) : (
+							<Eye size={22} color={passwordIconColor} />
+						)}
+					</InputIcon>
+				</InputSlot>
+			</Input>
 
-			<TextInput
-				value={confirmPassword}
-				onChangeText={setConfirmPassword}
-				secureTextEntry
-				autoComplete="password-new"
-				placeholder="Confirme ton mot de passe"
-				placeholderTextColor="#9ca3af"
-				className="rounded-2xl border border-outline-200 bg-white px-4 py-3 font-body text-base text-typography-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
-			/>
+			<Input accessibilityLabel="Confirme ton mot de passe">
+				<InputField
+					value={confirmPassword}
+					onChangeText={setConfirmPassword}
+					secureTextEntry={!confirmPasswordVisible}
+					autoComplete="password-new"
+					textContentType="newPassword"
+					placeholder="Confirme ton mot de passe"
+				/>
+				<InputSlot
+					onPress={() => setConfirmPasswordVisible((prev) => !prev)}
+					hitSlop={10}
+					accessibilityLabel={
+						confirmPasswordVisible
+							? "Masquer le mot de passe"
+							: "Afficher le mot de passe"
+					}
+				>
+					<InputIcon>
+						{confirmPasswordVisible ? (
+							<EyeSlash size={22} color={passwordIconColor} />
+						) : (
+							<Eye size={22} color={passwordIconColor} />
+						)}
+					</InputIcon>
+				</InputSlot>
+			</Input>
 
 			{error ? (
 				<Text className="text-sm font-body text-error-500" role="alert">
