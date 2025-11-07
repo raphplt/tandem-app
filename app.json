@@ -1,16 +1,16 @@
 {
   "expo": {
-			"name": "flint",
+			"name": "solow",
 			"slug": "tandem",
 			"version": "1.0.0",
 			"orientation": "portrait",
 			"icon": "./assets/images/icon.png",
-			"scheme": "flint",
+			"scheme": "solow",
 			"userInterfaceStyle": "automatic",
 			"newArchEnabled": true,
 			"ios": {
 				"supportsTablet": true,
-				"bundleIdentifier": "com.raphplt.flint",
+				"bundleIdentifier": "com.raphplt.solow",
 				"infoPlist": {
 					"ITSAppUsesNonExemptEncryption": false
 				}
@@ -24,7 +24,7 @@
 				},
 				"edgeToEdgeEnabled": true,
 				"predictiveBackGestureEnabled": false,
-				"package": "com.raphaeltkorp.flint"
+				"package": "com.raphaeltkorp.solow"
 			},
 			"web": {
 				"output": "static",

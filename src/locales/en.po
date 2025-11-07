@@ -53,7 +53,7 @@ msgstr "Welcome!"
 #. js-lingui-explicit-id
 #: app/(onboarding)/confirmation.tsx:80
 msgid "onboarding.confirmation.title"
-msgstr "Bienvenue sur Flint 🌿"
+msgstr "Bienvenue sur Solow 🌿"
 
 #. js-lingui-explicit-id
 #: app/(onboarding)/profile-step-1.tsx:52

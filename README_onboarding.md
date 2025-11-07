@@ -1,4 +1,4 @@
-# Flint Onboarding (Expo) — Implementation Notes
+# Solow Onboarding (Expo) — Implementation Notes
 
 ## Aperçu
 

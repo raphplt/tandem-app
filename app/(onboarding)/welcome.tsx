@@ -27,7 +27,7 @@ export default function WelcomeScreen() {
 	return (
 		<OnboardingShell
 			title={
-				<Trans id="onboarding.welcome.postAuth.title">Bienvenue dans Flint.</Trans>
+				<Trans id="onboarding.welcome.postAuth.title">Bienvenue dans Solow.</Trans>
 			}
 			subtitle={
 				<Trans id="onboarding.welcome.postAuth.subtitle">

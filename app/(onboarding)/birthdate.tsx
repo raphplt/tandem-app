@@ -72,7 +72,7 @@ export default function BirthdateScreen() {
 			title={<Trans id="onboarding.birthdate.title">Ton anniversaire</Trans>}
 			subtitle={
 				<Trans id="onboarding.birthdate.subtitle">
-					Nous vérifions simplement que tu as au moins 18 ans pour rejoindre Flint.
+					Nous vérifions simplement que tu as au moins 18 ans pour rejoindre Solow.
 				</Trans>
 			}
 			headerAccessory={<StepIndicator current={3} total={9} />}

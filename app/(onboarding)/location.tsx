@@ -226,7 +226,7 @@ export default function LocationScreen() {
 			title={<Trans id="onboarding.location.title">Où es-tu basé(e) ?</Trans>}
 			subtitle={
 				<Trans id="onboarding.location.subtitle">
-					Flint vous propose des rencontres proches de chez vous, garde la main sur
+					Solow vous propose des rencontres proches de chez vous, garde la main sur
 					ce que tu partages.
 				</Trans>
 			}
@@ -248,7 +248,7 @@ export default function LocationScreen() {
 				<View style={{ gap: 4 }}>
 					<Text className="text-base font-semibold text-typography-900 dark:text-zinc-100">
 						<Trans id="onboarding.location.permissionPrompt">
-							Autorise Flint à détecter ta ville pour t’aider à rencontrer des
+							Autorise Solow à détecter ta ville pour t’aider à rencontrer des
 							personnes proches.
 						</Trans>
 					</Text>

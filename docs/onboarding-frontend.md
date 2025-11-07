@@ -1,4 +1,4 @@
-# Onboarding Flint — Guide Frontend
+# Onboarding Solow — Guide Frontend
 
 Ce guide résume tout ce qu’il faut implémenter côté app (Expo/React Native) pour consommer le nouvel onboarding progressif.
 
