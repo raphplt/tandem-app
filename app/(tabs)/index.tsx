@@ -1,6 +1,7 @@
 import { useAuthSession } from "@/hooks/use-auth-session";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useThemeStore } from "@/hooks/use-theme-store";
+import { getDateWelcomeMessage } from "@/utils/time";
 import { Trans } from "@lingui/react/macro";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
@@ -66,7 +67,9 @@ export default function HomeScreen() {
 	const primaryGlow = primaryGlowGradients[resolvedTheme];
 	const matchShadow = matchButtonShadows[resolvedTheme];
 	const matchButtonBorderColor =
-		resolvedTheme === "dark" ? "rgba(255,255,255,0.1)" : "rgba(122, 39, 66, 0.25)";
+		resolvedTheme === "dark"
+			? "rgba(255,255,255,0.1)"
+			: "rgba(122, 39, 66, 0.25)";
 	const statusBarStyle = resolvedTheme === "dark" ? "light" : "dark";
 
 	const appUser = session?.user as SessionUser | undefined;
@@ -163,7 +166,9 @@ function HeroCard({
 				</Text>
 			</View>
 			<Text className="mt-5 font-heading text-[34px] leading-tight text-typography-900 dark:text-typography-white">
-				<Trans id={greetingKey}>Bonsoir</Trans>, {name}
+				<Trans id={greetingKey}>
+					{getDateWelcomeMessage(new Date())}, {name} !
+				</Trans>
 			</Text>
 			<Text className="mt-3 text-base text-typography-600 dark:text-typography-200">
 				<Trans id="home-screen.subtitle">
