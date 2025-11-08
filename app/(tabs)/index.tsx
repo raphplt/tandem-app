@@ -1,18 +1,19 @@
 import { useAuthSession } from "@/hooks/use-auth-session";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useThemeStore } from "@/hooks/use-theme-store";
-import { useMyProfile } from "@/src/hooks/use-profiles";
+import { useCreateConversationFromMatch } from "@/src/hooks/use-conversations";
 import {
 	useAcceptMatch,
 	useDailyMatch,
 	useRejectMatch,
 } from "@/src/hooks/use-matches";
-import { useCreateConversationFromMatch } from "@/src/hooks/use-conversations";
+import { useMyProfile } from "@/src/hooks/use-profiles";
 import { extractErrorMessage } from "@/src/utils/error";
+import type { MatchProfileSnapshot, MatchResponse } from "@/types/match";
 import { getDateWelcomeMessage } from "@/utils/time";
 import { Trans } from "@lingui/react/macro";
-import { Image } from "expo-image";
 import * as Haptics from "expo-haptics";
+import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -34,7 +35,6 @@ import {
 	View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import type { MatchProfileSnapshot, MatchResponse } from "@/types/match";
 
 type GradientColors = [ColorValue, ColorValue, ...ColorValue[]];
 
@@ -210,12 +210,7 @@ export default function HomeScreen() {
 								isStartingConversation={isStartingConversation}
 								waitingForPartner={waitingForPartner}
 							/>
-						) : (
-							<MatchingStateCard
-								isSearching={isDailyMatchLoading || isDailyMatchRefetching}
-								onRefresh={handleMatchPress}
-							/>
-						)}
+						) : null}
 						<MatchButton
 							onPress={handleMatchPress}
 							gradient={primaryGlow}
@@ -514,12 +509,12 @@ function MatchingStateCard({
 	return (
 		<View className="rounded-3xl border border-dashed border-outline-100 bg-white/60 p-6 dark:border-white/10 dark:bg-white/5">
 			<Text className="text-base font-heading text-typography-900 dark:text-typography-white">
-				<Trans id="matching-state.title">Prêt·e quand toi tu l'es</Trans>
+				<Trans id="matching-state.title">Prêt·e quand toi tu l&apos;es</Trans>
 			</Text>
 			<Text className="mt-2 text-sm text-typography-600 dark:text-typography-200">
 				<Trans id="matching-state.subtitle">
-					Aucun match actif pour le moment. Lance ta connexion du jour quand tu
-					seras disponible.
+					Aucun match actif pour le moment. Lance ta connexion du jour quand tu seras
+					disponible.
 				</Trans>
 			</Text>
 			<Pressable
