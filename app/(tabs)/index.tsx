@@ -1,10 +1,20 @@
+import { useAuthSession } from "@/hooks/use-auth-session";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useThemeStore } from "@/hooks/use-theme-store";
 import { useMyProfile } from "@/src/hooks/use-profiles";
+import {
+	useAcceptMatch,
+	useDailyMatch,
+	useRejectMatch,
+} from "@/src/hooks/use-matches";
+import { useCreateConversationFromMatch } from "@/src/hooks/use-conversations";
+import { extractErrorMessage } from "@/src/utils/error";
 import { getDateWelcomeMessage } from "@/utils/time";
 import { Trans } from "@lingui/react/macro";
+import { Image } from "expo-image";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import {
 	CaretRightIcon,
@@ -24,6 +34,7 @@ import {
 	View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import type { MatchProfileSnapshot, MatchResponse } from "@/types/match";
 
 type GradientColors = [ColorValue, ColorValue, ...ColorValue[]];
 
@@ -58,6 +69,23 @@ export default function HomeScreen() {
 	const { data: appUser, isLoading } = useMyProfile();
 	const { mode } = useThemeStore();
 	const colorScheme = useColorScheme();
+	const { data: session } = useAuthSession();
+	const router = useRouter();
+
+	const {
+		data: dailyMatch,
+		isLoading: isDailyMatchLoading,
+		isRefetching: isDailyMatchRefetching,
+		refetch: refetchDailyMatch,
+	} = useDailyMatch();
+	const { mutateAsync: acceptMatchMutation, isPending: isAccepting } =
+		useAcceptMatch();
+	const { mutateAsync: rejectMatchMutation, isPending: isRejecting } =
+		useRejectMatch();
+	const {
+		mutateAsync: createConversationFromMatch,
+		isPending: isStartingConversation,
+	} = useCreateConversationFromMatch();
 
 	const resolvedTheme: ThemeVariant =
 		(mode === "system" ? colorScheme ?? "light" : mode) === "dark"
@@ -87,8 +115,66 @@ export default function HomeScreen() {
 
 	const handleMatchPress = useCallback(async () => {
 		await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-		Alert.alert("WeTwo", "Cette fonctionnalité arrive bientôt.");
-	}, []);
+		try {
+			await refetchDailyMatch();
+		} catch (error) {
+			Alert.alert("WeTwo", extractErrorMessage(error));
+		}
+	}, [refetchDailyMatch]);
+
+	const handleAcceptMatch = useCallback(async () => {
+		if (!dailyMatch) return;
+		try {
+			const updatedMatch = await acceptMatchMutation(dailyMatch.id);
+			if (updatedMatch.isMutual || updatedMatch.isAccepted) {
+				const conversation = await createConversationFromMatch(updatedMatch.id);
+				router.push(`/chat/${conversation.id}` as never);
+			}
+		} catch (error) {
+			Alert.alert("WeTwo", extractErrorMessage(error));
+		}
+	}, [acceptMatchMutation, createConversationFromMatch, dailyMatch, router]);
+
+	const handleRejectMatch = useCallback(async () => {
+		if (!dailyMatch) return;
+		try {
+			await rejectMatchMutation({ matchId: dailyMatch.id });
+		} catch (error) {
+			Alert.alert("WeTwo", extractErrorMessage(error));
+		}
+	}, [dailyMatch, rejectMatchMutation]);
+
+	const handleStartConversation = useCallback(async () => {
+		if (!dailyMatch) return;
+		try {
+			const conversation = await createConversationFromMatch(dailyMatch.id);
+			router.push(`/chat/${conversation.id}` as never);
+		} catch (error) {
+			Alert.alert("WeTwo", extractErrorMessage(error));
+		}
+	}, [createConversationFromMatch, dailyMatch, router]);
+
+	const currentUserId = session?.user?.id;
+
+	const partnerProfile = useMemo<MatchProfileSnapshot | null>(() => {
+		if (!dailyMatch || !currentUserId) {
+			return dailyMatch?.profile1 ?? dailyMatch?.profile2 ?? null;
+		}
+		const isUser1 = dailyMatch.user1Id === currentUserId;
+		return (isUser1 ? dailyMatch.profile2 : dailyMatch.profile1) ?? null;
+	}, [currentUserId, dailyMatch]);
+
+	const waitingForPartner = useMemo(() => {
+		if (!dailyMatch || !currentUserId) return false;
+		const isUser1 = dailyMatch.user1Id === currentUserId;
+		const meAccepted = isUser1
+			? Boolean(dailyMatch.user1AcceptedAt)
+			: Boolean(dailyMatch.user2AcceptedAt);
+		const partnerAccepted = isUser1
+			? Boolean(dailyMatch.user2AcceptedAt)
+			: Boolean(dailyMatch.user1AcceptedAt);
+		return meAccepted && !partnerAccepted;
+	}, [currentUserId, dailyMatch]);
 
 	if (isLoading) {
 		return (
@@ -111,13 +197,32 @@ export default function HomeScreen() {
 			<SafeAreaView className="flex-1">
 				<View className="flex-1 justify-between gap-5 px-6 pb-8 pt-6">
 					<HeroCard streak={streak} greetingKey={greeting} name={firstName} />
-					<View className="flex flex-col gap-2 justify-center items-center">
+					<View className="flex flex-col gap-4">
+						{dailyMatch ? (
+							<DailyMatchCard
+								match={dailyMatch}
+								partner={partnerProfile}
+								onAccept={handleAcceptMatch}
+								onReject={handleRejectMatch}
+								onStartChat={handleStartConversation}
+								isAccepting={isAccepting}
+								isRejecting={isRejecting}
+								isStartingConversation={isStartingConversation}
+								waitingForPartner={waitingForPartner}
+							/>
+						) : (
+							<MatchingStateCard
+								isSearching={isDailyMatchLoading || isDailyMatchRefetching}
+								onRefresh={handleMatchPress}
+							/>
+						)}
 						<MatchButton
 							onPress={handleMatchPress}
 							gradient={primaryGlow}
 							shadowStyle={matchShadow}
 							theme={resolvedTheme}
 							borderColor={matchButtonBorderColor}
+							isLoading={isDailyMatchLoading || isDailyMatchRefetching}
 						/>
 						<Text className="mt-8 text-center text-sm text-typography-600 dark:text-typography-300">
 							<Trans id="home-screen.cta-hint">
@@ -171,12 +276,14 @@ function MatchButton({
 	shadowStyle,
 	theme,
 	borderColor,
+	isLoading,
 }: {
 	onPress: () => void;
 	gradient: GradientColors;
 	shadowStyle: ViewStyle;
 	theme: ThemeVariant;
 	borderColor: string;
+	isLoading?: boolean;
 }) {
 	const isDark = theme === "dark";
 	const iconColor = isDark ? "#FFFFFF" : "#7A2742";
@@ -184,6 +291,7 @@ function MatchButton({
 	return (
 		<Pressable
 			onPress={onPress}
+			disabled={isLoading}
 			accessibilityRole="button"
 			className="active:scale-95"
 		>
@@ -196,12 +304,23 @@ function MatchButton({
 					end={{ x: 1, y: 1 }}
 					style={[styles.matchButton, shadowStyle, { borderColor }]}
 				>
-					<View className="flex-row items-center gap-2">
-						<LightningIcon size={36} weight="fill" color={iconColor} />
-						<Text className="text-2xl font-semibold text-typography-900 dark:text-typography-white">
-							<Trans id="home-screen.cta">Matcher</Trans>
-						</Text>
-					</View>
+					{isLoading ? (
+						<View className="flex-row items-center gap-2">
+							<ActivityIndicator color={iconColor} />
+							<Text className="text-2xl font-semibold text-typography-900 dark:text-typography-white">
+								<Trans id="home-screen.cta.loading">
+									Recherche en cours
+								</Trans>
+							</Text>
+						</View>
+					) : (
+						<View className="flex-row items-center gap-2">
+							<LightningIcon size={36} weight="fill" color={iconColor} />
+							<Text className="text-2xl font-semibold text-typography-900 dark:text-typography-white">
+								<Trans id="home-screen.cta">Matcher</Trans>
+							</Text>
+						</View>
+					)}
 					<View className="mt-5 flex-row items-center gap-2 rounded-full bg-white/60 px-3 py-1 dark:bg-black/20">
 						<SparkleIcon size={14} weight="fill" color={iconColor} />
 						<Text className="text-[11px] tracking-[1.4px] text-typography-700 dark:text-typography-white/80">
@@ -253,3 +372,276 @@ const styles = StyleSheet.create({
 		borderColor: "rgba(255,255,255,0.1)",
 	},
 });
+
+function DailyMatchCard({
+	match,
+	partner,
+	onAccept,
+	onReject,
+	onStartChat,
+	isAccepting,
+	isRejecting,
+	isStartingConversation,
+	waitingForPartner,
+}: {
+	match: MatchResponse;
+	partner: MatchProfileSnapshot | null;
+	onAccept: () => void;
+	onReject: () => void;
+	onStartChat: () => void;
+	isAccepting: boolean;
+	isRejecting: boolean;
+	isStartingConversation: boolean;
+	waitingForPartner: boolean;
+}) {
+	const name = partner?.firstName ?? "Ton match";
+	const secondaryLine = [
+		partner?.age ? `${partner.age} ans` : null,
+		partner?.city,
+		partner?.country,
+	]
+		.filter(Boolean)
+		.join(" • ");
+
+	const chipsSource =
+		(partner?.values && partner.values.length > 0 && partner.values) ||
+		(partner?.interests && partner.interests.length > 0 && partner.interests) ||
+		[];
+	const chips = chipsSource ? chipsSource.slice(0, 3) : [];
+
+	const statusLabel = getMatchStatusLabel(match, waitingForPartner);
+	const expiresIn = formatTimeUntilExpiry(match.timeUntilExpiry);
+	const canChat = match.isAccepted || match.isMutual;
+
+	return (
+		<View className="rounded-3xl border border-outline-100 bg-white/95 p-6 dark:border-white/10 dark:bg-white/5">
+			<Text className="text-xs uppercase tracking-[2px] text-typography-500 dark:text-typography-400">
+				<Trans id="daily-match.header">Rencontre du jour</Trans>
+			</Text>
+			<View className="mt-4 flex-row items-center gap-4">
+				<Avatar name={name} photoUrl={partner?.photoUrl} />
+				<View className="flex-1">
+					<Text className="text-2xl font-heading text-typography-900 dark:text-typography-white">
+						{name}
+					</Text>
+					{secondaryLine ? (
+						<Text className="text-sm text-typography-600 dark:text-typography-300">
+							{secondaryLine}
+						</Text>
+					) : null}
+				</View>
+				<View className="items-end">
+					<Text className="text-xs uppercase text-typography-500 dark:text-typography-400">
+						<Trans id="daily-match.score">Affinité</Trans>
+					</Text>
+					<Text className="text-3xl font-semibold text-accentRose-600 dark:text-accentRose-300">
+						{Math.round(match.compatibilityScore)}%
+					</Text>
+				</View>
+			</View>
+
+			{chips.length > 0 ? (
+				<View className="mt-4 flex-row flex-wrap gap-2">
+					{chips.map((chip) => (
+						<View
+							key={chip}
+							className="rounded-full border border-accentGold-200/60 bg-accentGold-50/60 px-3 py-1 dark:border-accentGold-800/60 dark:bg-accentGold-900/20"
+						>
+							<Text className="text-xs font-semibold uppercase tracking-[1px] text-accentGold-700 dark:text-accentGold-200">
+								{chip}
+							</Text>
+						</View>
+					))}
+				</View>
+			) : null}
+
+			<View className="mt-4 rounded-2xl border border-outline-100/60 bg-background-light/80 px-4 py-3 dark:border-white/5 dark:bg-white/5">
+				<Text className="text-xs uppercase tracking-[1.2px] text-typography-500 dark:text-typography-300">
+					{statusLabel}
+				</Text>
+				<Text className="mt-1 text-sm text-typography-700 dark:text-typography-200">
+					<Trans id="daily-match.expires-in">
+						Expire dans {expiresIn ?? "24h"}.
+					</Trans>
+				</Text>
+			</View>
+
+			<View className="mt-5 flex-row gap-3">
+				{!match.isAccepted && !waitingForPartner ? (
+					<>
+						<MatchActionButton
+							label={<Trans id="daily-match.reject">Passer</Trans>}
+							onPress={onReject}
+							variant="ghost"
+							loading={isRejecting}
+						/>
+						<MatchActionButton
+							label={<Trans id="daily-match.accept">Accepter</Trans>}
+							onPress={onAccept}
+							loading={isAccepting}
+						/>
+					</>
+				) : null}
+				{waitingForPartner ? (
+					<View className="flex-1 rounded-2xl border border-dashed border-outline-200 px-4 py-3">
+						<Text className="text-sm text-typography-600 dark:text-typography-300">
+							<Trans id="daily-match.waiting">
+								En attente de la réponse de ton match.
+							</Trans>
+						</Text>
+					</View>
+				) : null}
+				{canChat ? (
+					<MatchActionButton
+						label={<Trans id="daily-match.start-chat">Commencer à discuter</Trans>}
+						onPress={onStartChat}
+						loading={isStartingConversation}
+						icon={<LightningIcon size={20} color="#FFFFFF" weight="fill" />}
+					/>
+				) : null}
+			</View>
+		</View>
+	);
+}
+
+function MatchingStateCard({
+	isSearching,
+	onRefresh,
+}: {
+	isSearching: boolean;
+	onRefresh: () => void;
+}) {
+	return (
+		<View className="rounded-3xl border border-dashed border-outline-100 bg-white/60 p-6 dark:border-white/10 dark:bg-white/5">
+			<Text className="text-base font-heading text-typography-900 dark:text-typography-white">
+				<Trans id="matching-state.title">Prêt·e quand toi tu l'es</Trans>
+			</Text>
+			<Text className="mt-2 text-sm text-typography-600 dark:text-typography-200">
+				<Trans id="matching-state.subtitle">
+					Aucun match actif pour le moment. Lance ta connexion du jour quand tu
+					seras disponible.
+				</Trans>
+			</Text>
+			<Pressable
+				onPress={onRefresh}
+				disabled={isSearching}
+				className="mt-5 items-center rounded-2xl border border-outline-100/80 bg-white px-4 py-3 dark:border-white/10 dark:bg-white/10"
+			>
+				{isSearching ? (
+					<ActivityIndicator />
+				) : (
+					<Text className="font-semibold text-typography-900 dark:text-typography-white">
+						<Trans id="matching-state.refresh">Mettre à jour</Trans>
+					</Text>
+				)}
+			</Pressable>
+		</View>
+	);
+}
+
+function Avatar({
+	name,
+	photoUrl,
+}: {
+	name: string;
+	photoUrl?: string | null;
+}) {
+	const initials = name
+		.split(" ")
+		.map((part) => part.charAt(0).toUpperCase())
+		.slice(0, 2)
+		.join("");
+
+	return (
+		<View className="h-16 w-16 items-center justify-center overflow-hidden rounded-2xl border border-outline-100 bg-background-muted dark:border-white/10 dark:bg-white/10">
+			{photoUrl ? (
+				<Image source={{ uri: photoUrl }} style={{ width: "100%", height: "100%" }} />
+			) : (
+				<Text className="text-xl font-semibold text-typography-900 dark:text-typography-white">
+					{initials}
+				</Text>
+			)}
+		</View>
+	);
+}
+
+function MatchActionButton({
+	label,
+	onPress,
+	variant = "solid",
+	loading,
+	icon,
+}: {
+	label: React.ReactNode;
+	onPress: () => void;
+	variant?: "solid" | "ghost";
+	loading?: boolean;
+	icon?: React.ReactNode;
+}) {
+	const baseClasses =
+		"flex-1 flex-row items-center justify-center rounded-2xl px-4 py-3 transition-all duration-150 active:scale-[0.98]";
+	const solidClasses =
+		"bg-typography-900 dark:bg-white text-white dark:text-typography-900";
+	const ghostClasses =
+		"border border-outline-200 bg-white/80 text-typography-900 dark:border-white/20 dark:bg-white/5 dark:text-white";
+	const className =
+		variant === "solid" ? `${baseClasses} ${solidClasses}` : `${baseClasses} ${ghostClasses}`;
+
+	return (
+		<Pressable
+			onPress={onPress}
+			disabled={loading}
+			className={className}
+		>
+			{loading ? (
+				<ActivityIndicator color={variant === "solid" ? "#FFFFFF" : undefined} />
+			) : (
+				<View className="flex-row items-center gap-2">
+					{icon}
+					<Text
+						className={
+							variant === "solid"
+								? "font-semibold text-white"
+								: "font-semibold text-typography-900 dark:text-white"
+						}
+					>
+						{label}
+					</Text>
+				</View>
+			)}
+		</Pressable>
+	);
+}
+
+function formatTimeUntilExpiry(hoursLeft?: number) {
+	if (typeof hoursLeft !== "number") return null;
+	const hours = Math.floor(hoursLeft);
+	const minutes = Math.max(0, Math.round((hoursLeft - hours) * 60));
+	if (hours <= 0 && minutes <= 0) {
+		return "quelques instants";
+	}
+	if (hours === 0) {
+		return `${minutes} min`;
+	}
+	if (minutes === 0) {
+		return `${hours} h`;
+	}
+	return `${hours} h ${minutes} min`;
+}
+
+function getMatchStatusLabel(match: MatchResponse, waitingForPartner: boolean) {
+	if (match.isRejected) {
+		return <Trans id="daily-match.status.rejected">Match refusé</Trans>;
+	}
+	if (match.isAccepted) {
+		return <Trans id="daily-match.status.accepted">Connexion prête</Trans>;
+	}
+	if (waitingForPartner) {
+		return (
+			<Trans id="daily-match.status.waiting-partner">
+				En attente de ton match
+			</Trans>
+		);
+	}
+	return <Trans id="daily-match.status.pending">Réponse attendue</Trans>;
+}

@@ -16,7 +16,7 @@ export function useOnboardingAnalytics() {
 				}
 				return;
 			}
-			posthog.capture(event, payload);
+			posthog.capture(event, payload as any);
 		},
 		[posthog]
 	);

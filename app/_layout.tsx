@@ -6,6 +6,7 @@ import { useThemeStore } from "@/hooks/use-theme-store";
 import { I18nProvider, i18n } from "@/src/i18n";
 import { AuthProvider } from "@/src/providers/auth-provider";
 import { QueryProvider } from "@/src/providers/query-provider";
+import { ChatSocketProvider } from "@/src/providers/chat-socket-provider";
 import {
 	Fraunces_400Regular,
 	Fraunces_500Medium,
@@ -93,10 +94,15 @@ export default function RootLayout() {
 				<I18nProvider i18n={i18n}>
 					<QueryProvider>
 						<AuthProvider>
-							<Stack screenOptions={{ headerShown: false }}>
-								<Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-								<Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
-							</Stack>
+							<ChatSocketProvider>
+								<Stack screenOptions={{ headerShown: false }}>
+									<Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+									<Stack.Screen
+										name="(onboarding)"
+										options={{ headerShown: false }}
+									/>
+								</Stack>
+							</ChatSocketProvider>
 						</AuthProvider>
 					</QueryProvider>
 				</I18nProvider>
