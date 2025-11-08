@@ -21,6 +21,7 @@ import { useAuthSession } from "@/hooks/use-auth-session";
 import { useLocale } from "@/hooks/use-locale";
 import { useThemeStore, type ThemeMode } from "@/hooks/use-theme-store";
 import { useMyProfile } from "@/src/hooks/use-profiles";
+import { getImageUrl } from "@/utils/image";
 
 type AccentTone = "gold" | "rose" | "primary";
 
@@ -352,7 +353,7 @@ export default function SettingsScreen() {
 								<View className="h-20 w-20 items-center justify-center overflow-hidden rounded-full border-2 border-accentGold-400 bg-white dark:border-accentGold-600 dark:bg-zinc-900">
 									{profile?.photoUrl ? (
 										<Image
-											source={{ uri: profile.photoUrl }}
+											source={{ uri: getImageUrl(profile.photoUrl) }}
 											style={{ width: "100%", height: "100%" }}
 											contentFit="cover"
 										/>

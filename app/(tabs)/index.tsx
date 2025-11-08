@@ -1,6 +1,6 @@
-import { useAuthSession } from "@/hooks/use-auth-session";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useThemeStore } from "@/hooks/use-theme-store";
+import { useMyProfile } from "@/src/hooks/use-profiles";
 import { getDateWelcomeMessage } from "@/utils/time";
 import { Trans } from "@lingui/react/macro";
 import * as Haptics from "expo-haptics";
@@ -55,7 +55,7 @@ const matchButtonShadows: Record<ThemeVariant, ViewStyle> = {
 };
 
 export default function HomeScreen() {
-	const { data: session, isLoading } = useAuthSession();
+	const { data: appUser, isLoading } = useMyProfile();
 	const { mode } = useThemeStore();
 	const colorScheme = useColorScheme();
 
@@ -72,18 +72,11 @@ export default function HomeScreen() {
 			: "rgba(122, 39, 66, 0.25)";
 	const statusBarStyle = resolvedTheme === "dark" ? "light" : "dark";
 
-	const appUser = session?.user as SessionUser | undefined;
-	console.log("session.user:", session?.user);
+	const firstName = (appUser?.firstName as string | undefined) ?? "Utilisateur";
 
-	const firstName =
-		typeof appUser?.firstName === "string" ? appUser.firstName : "Alex";
-	const streak = typeof appUser?.streak === "number" ? appUser.streak : 7;
-	const mood =
-		typeof appUser?.mode === "string" ? appUser.mode : "Rencontres en douceur";
-	const availability =
-		typeof appUser?.status === "string" && appUser.status.trim().length
-			? appUser.status
-			: "Disponible pour matcher";
+	//TODO : fetch real streak and mood from user profile
+	const streak = 7;
+	const mood = "Rencontres en douceur";
 
 	const greeting = useMemo(() => {
 		const hours = new Date().getHours();
@@ -117,27 +110,20 @@ export default function HomeScreen() {
 			<StatusBar style={statusBarStyle} />
 			<SafeAreaView className="flex-1">
 				<View className="flex-1 justify-between gap-5 px-6 pb-8 pt-6">
-					<View className="flex-1 justify-between gap-8">
-						<HeroCard
-							streak={streak}
-							greetingKey={greeting}
-							name={firstName}
-							availability={availability}
+					<HeroCard streak={streak} greetingKey={greeting} name={firstName} />
+					<View className="flex flex-col gap-2 justify-center items-center">
+						<MatchButton
+							onPress={handleMatchPress}
+							gradient={primaryGlow}
+							shadowStyle={matchShadow}
+							theme={resolvedTheme}
+							borderColor={matchButtonBorderColor}
 						/>
-						<View className="items-center">
-							<MatchButton
-								onPress={handleMatchPress}
-								gradient={primaryGlow}
-								shadowStyle={matchShadow}
-								theme={resolvedTheme}
-								borderColor={matchButtonBorderColor}
-							/>
-							<Text className="mt-8 text-center text-sm text-typography-600 dark:text-typography-300">
-								<Trans id="home-screen.cta-hint">
-									Une seule conversation par jour. Fais-en un moment sincère.
-								</Trans>
-							</Text>
-						</View>
+						<Text className="mt-8 text-center text-sm text-typography-600 dark:text-typography-300">
+							<Trans id="home-screen.cta-hint">
+								Une seule conversation par jour. Fais-en un moment sincère.
+							</Trans>
+						</Text>
 					</View>
 					<View className="mt-4 flex flex-col gap-4">
 						<MoodCard mood={mood} />
@@ -152,12 +138,10 @@ function HeroCard({
 	streak,
 	greetingKey,
 	name,
-	availability,
 }: {
 	streak: number;
 	greetingKey: string;
 	name: string;
-	availability: string;
 }) {
 	return (
 		<View className="overflow-hidden rounded-[32px] border border-outline-100 bg-white/95 p-6 dark:border-white/10 dark:bg-white/5">
@@ -177,29 +161,6 @@ function HeroCard({
 					C&apos;est le moment de ta rencontre du jour.
 				</Trans>
 			</Text>
-			<View className="mt-6 flex-row items-center justify-between rounded-2xl border border-outline-100 bg-white/80 px-4 py-3 dark:border-white/10 dark:bg-black/30">
-				<View>
-					<Text className="text-[11px] uppercase tracking-[2px] text-typography-500 dark:text-typography-500">
-						<Trans id="home-screen.status.label">Statut</Trans>
-					</Text>
-					<Text className="mt-1 text-sm text-typography-900 dark:text-typography-100">
-						{availability}
-					</Text>
-				</View>
-				<View className="items-end">
-					<Text className="text-[11px] uppercase tracking-[2px] text-typography-500 dark:text-typography-500">
-						<Trans id="home-screen.timer.label">Prochain créneau</Trans>
-					</Text>
-					<View className="mt-1 flex-row items-baseline gap-2">
-						<Text className="text-lg font-semibold text-typography-900 dark:text-typography-white">
-							14h12
-						</Text>
-						<Text className="text-xs text-typography-500 dark:text-typography-400">
-							<Trans id="home-screen.timer.hint">après ta session</Trans>
-						</Text>
-					</View>
-				</View>
-			</View>
 		</View>
 	);
 }
@@ -280,14 +241,6 @@ function MoodCard({ mood }: { mood: string }) {
 		</View>
 	);
 }
-
-type SessionUser = {
-	firstName?: unknown;
-	streak?: unknown;
-	mode?: unknown;
-	status?: unknown;
-	interests?: unknown;
-};
 
 const styles = StyleSheet.create({
 	matchButton: {

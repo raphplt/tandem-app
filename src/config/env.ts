@@ -23,6 +23,7 @@ export const env = {
 	baseURL,
 	authBaseURL:
 		cleanUrl(process.env.EXPO_PUBLIC_AUTH_BASE_URL) ?? defaultAuthBaseURL,
+	r2PublicBaseURL: process.env.EXPO_PUBLIC_R2_PUBLIC_BASE_URL ?? "",
 	authStoragePrefix:
 		process.env.EXPO_PUBLIC_AUTH_STORAGE_PREFIX ??
 		extra?.eas?.projectId ??

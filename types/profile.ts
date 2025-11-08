@@ -4,6 +4,7 @@ import { Gender, ProfileVisibility } from "./user";
 export interface ProfileResponseDto {
 	id: string;
 	userId: string;
+	firstName: string;
 	bio: string;
 	city: string;
 	country?: string;
