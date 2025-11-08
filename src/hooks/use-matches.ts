@@ -3,7 +3,7 @@ import { unwrapApiResponse } from "@/src/lib/api/unwrap";
 import type { MatchResponse } from "@/types/match";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-const MATCHES_KEY = ["matches"];
+export const MATCHES_QUERY_KEY = ["matches"] as const;
 
 function buildDailyMatchEndpoint(date?: string) {
 	const base = "/api/v1/matches/daily";
@@ -14,13 +14,13 @@ function buildDailyMatchEndpoint(date?: string) {
 }
 
 function invalidateMatchQueries(queryClient: ReturnType<typeof useQueryClient>) {
-	queryClient.invalidateQueries({ queryKey: MATCHES_KEY });
-	queryClient.invalidateQueries({ queryKey: [...MATCHES_KEY, "daily"] });
+	queryClient.invalidateQueries({ queryKey: MATCHES_QUERY_KEY });
+	queryClient.invalidateQueries({ queryKey: [...MATCHES_QUERY_KEY, "daily"] });
 }
 
 export function useDailyMatch(date?: string) {
 	return useQuery({
-		queryKey: [...MATCHES_KEY, "daily", date ?? "today"],
+		queryKey: [...MATCHES_QUERY_KEY, "daily", date ?? "today"],
 		queryFn: async () => {
 			const endpoint = buildDailyMatchEndpoint(date);
 			const result = await apiFetch<MatchResponse | null>(endpoint);
@@ -39,7 +39,7 @@ export function useDailyMatch(date?: string) {
 
 export function useMatches() {
 	return useQuery({
-		queryKey: [...MATCHES_KEY, "me"],
+		queryKey: [...MATCHES_QUERY_KEY, "me"],
 		queryFn: async () => {
 			const matches = await unwrapApiResponse<MatchResponse[]>(
 				apiFetch("/api/v1/matches/me"),

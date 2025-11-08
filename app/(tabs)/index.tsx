@@ -24,7 +24,7 @@ import {
 	SparkleIcon,
 	SunHorizonIcon,
 } from "phosphor-react-native";
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ColorValue, ViewStyle } from "react-native";
 import {
 	ActivityIndicator,
@@ -32,9 +32,12 @@ import {
 	Pressable,
 	StyleSheet,
 	Text,
+	TouchableOpacity,
 	View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import type { SearchStateEventPayload, AvailabilityStatus } from "@/types/availability";
+import { useDailySearchStream } from "@/src/hooks/use-daily-search-stream";
 
 type GradientColors = [ColorValue, ColorValue, ...ColorValue[]];
 
@@ -71,6 +74,14 @@ export default function HomeScreen() {
 	const colorScheme = useColorScheme();
 	const { data: session } = useAuthSession();
 	const router = useRouter();
+	const {
+		isSearching,
+		searchState,
+		startSearch,
+		cancelSearch,
+		error: searchStreamError,
+	} = useDailySearchStream();
+	const [isCancellingSearch, setIsCancellingSearch] = useState(false);
 
 	const {
 		data: dailyMatch,
@@ -86,6 +97,8 @@ export default function HomeScreen() {
 		mutateAsync: createConversationFromMatch,
 		isPending: isStartingConversation,
 	} = useCreateConversationFromMatch();
+	const matchButtonIsLoading =
+		isDailyMatchLoading || isDailyMatchRefetching || isSearching;
 
 	const resolvedTheme: ThemeVariant =
 		(mode === "system" ? colorScheme ?? "light" : mode) === "dark"
@@ -115,12 +128,30 @@ export default function HomeScreen() {
 
 	const handleMatchPress = useCallback(async () => {
 		await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+		if (isSearching) {
+			return;
+		}
 		try {
-			await refetchDailyMatch();
+			if (dailyMatch) {
+				await refetchDailyMatch();
+				return;
+			}
+			await startSearch();
 		} catch (error) {
 			Alert.alert("WeTwo", extractErrorMessage(error));
 		}
-	}, [refetchDailyMatch]);
+	}, [dailyMatch, isSearching, refetchDailyMatch, startSearch]);
+
+	const handleCancelSearch = useCallback(async () => {
+		setIsCancellingSearch(true);
+		try {
+			await cancelSearch();
+		} catch (error) {
+			Alert.alert("WeTwo", extractErrorMessage(error));
+		} finally {
+			setIsCancellingSearch(false);
+		}
+	}, [cancelSearch]);
 
 	const handleAcceptMatch = useCallback(async () => {
 		if (!dailyMatch) return;
@@ -198,6 +229,14 @@ export default function HomeScreen() {
 				<View className="flex-1 justify-between gap-5 px-6 pb-8 pt-6">
 					<HeroCard streak={streak} greetingKey={greeting} name={firstName} />
 					<View className="flex flex-col gap-4">
+						{isSearching ? (
+							<SearchStateCard
+								state={searchState}
+								onCancel={handleCancelSearch}
+								isCancelling={isCancellingSearch}
+								errorMessage={searchStreamError}
+							/>
+						) : null}
 						{dailyMatch ? (
 							<DailyMatchCard
 								match={dailyMatch}
@@ -217,7 +256,7 @@ export default function HomeScreen() {
 							shadowStyle={matchShadow}
 							theme={resolvedTheme}
 							borderColor={matchButtonBorderColor}
-							isLoading={isDailyMatchLoading || isDailyMatchRefetching}
+							isLoading={matchButtonIsLoading}
 						/>
 						<Text className="mt-8 text-center text-sm text-typography-600 dark:text-typography-300">
 							<Trans id="home-screen.cta-hint">
@@ -326,6 +365,138 @@ function MatchButton({
 			</View>
 		</Pressable>
 	);
+}
+
+function SearchStateCard({
+	state,
+	onCancel,
+	isCancelling,
+	errorMessage,
+}: {
+	state: SearchStateEventPayload | null;
+	onCancel: () => void;
+	isCancelling: boolean;
+	errorMessage?: string | null;
+}) {
+	const durationLabel = useQueueDurationLabel(state?.queuedAt ?? null);
+	const statusLabel = getSearchStatusLabel(state?.status);
+
+	return (
+		<View className="overflow-hidden rounded-[28px] border border-outline-100 bg-white/95 p-5 dark:border-outline-800 dark:bg-black/30">
+			<View className="flex-row items-center gap-3">
+				<ActivityIndicator color="#E08AA4" />
+				<View className="flex-1">
+					<Text className="text-lg font-semibold text-typography-900 dark:text-typography-white">
+						{statusLabel}
+					</Text>
+					{durationLabel ? (
+						<Text className="mt-1 text-sm text-typography-600 dark:text-typography-300">
+							<Trans
+								id="home-screen.search.wait-time"
+								values={{ duration: durationLabel }}
+							>
+								En file depuis {durationLabel}
+							</Trans>
+						</Text>
+					) : null}
+					{state?.isOnline === false ? (
+						<Text className="mt-1 text-xs text-error-500">
+							<Trans id="home-screen.search.offline">
+								On ne reçoit plus ton signal, reste sur l'écran pour conserver ta
+								place.
+							</Trans>
+						</Text>
+					) : null}
+					{errorMessage ? (
+						<Text className="mt-2 text-xs text-error-500">{errorMessage}</Text>
+					) : null}
+				</View>
+			</View>
+			<TouchableOpacity
+				onPress={onCancel}
+				disabled={isCancelling}
+				className={`mt-5 flex-row items-center justify-center gap-2 rounded-full border px-4 py-2 ${
+					isCancelling
+						? "border-outline-200 bg-outline-50 dark:border-outline-700 dark:bg-outline-800/40"
+						: "border-outline-200 bg-white dark:border-outline-600 dark:bg-white/5"
+				}`}
+			>
+				{isCancelling ? (
+					<ActivityIndicator size="small" color="#7A2742" />
+				) : (
+					<SparkleIcon size={18} weight="fill" color="#E08AA4" />
+				)}
+				<Text className="text-sm font-semibold text-typography-900 dark:text-typography-white">
+					{isCancelling ? (
+						<Trans id="home-screen.search.cancel.loading">Annulation…</Trans>
+					) : (
+						<Trans id="home-screen.search.cancel">Annuler la recherche</Trans>
+					)}
+				</Text>
+			</TouchableOpacity>
+		</View>
+	);
+}
+
+function useQueueDurationLabel(queuedAt?: string | null) {
+	const [now, setNow] = useState(Date.now());
+
+	useEffect(() => {
+		if (!queuedAt) {
+			return;
+		}
+		const interval = setInterval(() => setNow(Date.now()), 1000);
+		return () => clearInterval(interval);
+	}, [queuedAt]);
+
+	return useMemo(() => {
+		if (!queuedAt) {
+			return null;
+		}
+		const queuedDate = new Date(queuedAt);
+		if (Number.isNaN(queuedDate.getTime())) {
+			return null;
+		}
+		const diffMs = Math.max(0, now - queuedDate.getTime());
+		const minutes = Math.floor(diffMs / 60000);
+		const seconds = Math.floor((diffMs % 60000) / 1000);
+		if (minutes > 0) {
+			return `${minutes} min ${seconds.toString().padStart(2, "0")} s`;
+		}
+		return `${seconds} s`;
+	}, [now, queuedAt]);
+}
+
+function getSearchStatusLabel(status?: AvailabilityStatus) {
+	switch (status) {
+		case "matched":
+			return (
+				<Trans id="home-screen.search.status.matched">
+					Match trouvé ! Prépare-toi à faire connaissance.
+				</Trans>
+			);
+		case "queued":
+			return (
+				<Trans id="home-screen.search.status.queued">
+					Recherche en cours… on sélectionne ton duo du jour.
+				</Trans>
+			);
+		case "idle":
+			return (
+				<Trans id="home-screen.search.status.idle">
+					En attente. Lance ou relance la recherche quand tu veux.
+				</Trans>
+			);
+		default:
+			return (
+				<Trans
+					id="home-screen.search.status.generic"
+					values={{ status: status ?? "—" }}
+				>
+					Statut : {status ?? "—"}
+				</Trans>
+			);
+	}
 }
 
 function MoodCard({ mood }: { mood: string }) {
