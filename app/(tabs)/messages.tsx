@@ -13,8 +13,8 @@ import { useRouter } from "expo-router";
 import {
 	ArrowRight,
 	ChatCenteredDots,
-	Clock,
 	ChatsTeardrop,
+	Clock,
 } from "phosphor-react-native";
 import { useCallback, useMemo, type ReactNode } from "react";
 import {
@@ -31,8 +31,12 @@ export default function MessagesScreen() {
 	const colorScheme = useColorScheme();
 	const { data: session } = useAuthSession();
 	const router = useRouter();
-	const { data: conversations, isLoading, refetch, isRefetching } =
-		useConversations();
+	const {
+		data: conversations,
+		isLoading,
+		refetch,
+		isRefetching,
+	} = useConversations();
 	const { mutate: markConversationRead } = useMarkConversationRead();
 
 	const actualMode =
@@ -72,10 +76,7 @@ export default function MessagesScreen() {
 
 	return (
 		<SafeAreaView className="flex-1 bg-background-0 dark:bg-background-950">
-			<ScrollView
-				className="flex-1"
-				contentContainerClassName="px-6 pb-12 pt-6"
-			>
+			<ScrollView className="flex-1" contentContainerClassName="px-6 pb-12 pt-6">
 				<View className="flex-row items-center justify-between">
 					<View>
 						<Text className="text-xs uppercase tracking-[2px] text-typography-500 dark:text-typography-300">
@@ -86,12 +87,18 @@ export default function MessagesScreen() {
 						</Text>
 					</View>
 					<LinearGradient
+						style={{
+							borderRadius: 16,
+							justifyContent: "center",
+							alignItems: "center",
+							paddingVertical: 4,
+							paddingHorizontal: 12,
+						}}
 						colors={
 							actualMode === "dark"
 								? ["#0A0A0B", "#121315", "#7A5400"]
 								: ["#FFF5F8", "#F8E9B8"]
 						}
-						className="rounded-2xl px-4 py-2"
 					>
 						<Text className="text-xs font-semibold uppercase tracking-[1.4px] text-typography-900 dark:text-typography-white">
 							<Trans id="messages.daily-limit">1 / jour</Trans>
