@@ -5,7 +5,8 @@ Ce guide permet de décrire le fonctionnement actuel du système de matching et 
 ## Authentification & formats
 
 - Toutes les routes REST exposées ici utilisent `AuthGuard` (session BetterAuth). Le client Expo doit envoyer le header `Authorization: Bearer <token>` configuré côté BetterAuth.
-- Les routes `matches` sont protégées par `RolesGuard` avec le rôle `admin`. Pour un usage utilisateur, de nouveaux endpoints devront être ajoutés ou un proxy doit être prévu.
+- Les routes `matches` exposent désormais une surface admin (CRUD complet réservé au rôle `admin`) **et** une surface utilisateur (`/matches/me`, `/matches/daily`, `/matches/:id/(accept|reject|cancel)`) accessible à tout utilisateur authentifié.
+- Les routes `conversations` suivent la même logique : surface admin et endpoints utilisateurs (`/conversations/me`, `/conversations/active/me`, `/conversations/:id/(extend|close|archive|read)`, `/conversations/from-match/:matchId`).
 - Les routes `messages` utilisent `OwnershipGuard` : l'utilisateur connecté doit être membre de la conversation associée.
 - Toutes les dates sont renvoyées en ISO 8601 (`string` côté HTTP). Les nombres décimaux (`compatibilityScore`) sont sérialisés en chaîne JSON.
 
@@ -49,7 +50,11 @@ export interface MatchResponse {
   matchDate: string; // date uniquement (UTC)
   expiresAt?: string;
   acceptedAt?: string;
+  user1AcceptedAt?: string;
+  user2AcceptedAt?: string;
   rejectedAt?: string;
+  user1RejectedAt?: string;
+  user2RejectedAt?: string;
   cancelledAt?: string;
   expiredAt?: string;
   isActive: boolean;
@@ -78,8 +83,10 @@ export interface MatchResponse {
 ### Logique métier notable (MatchesService)
 
 - Limite : 1 match quotidien par utilisateur (`MAX_DAILY_MATCHES`).
+- Chaque acceptation est stockée par utilisateur (`user1AcceptedAt` / `user2AcceptedAt`). Le statut ne passe à `accepted` que lorsque les deux côtés ont répondu positivement, ce qui garantit un consentement mutuel.
 - Expiration par défaut : `MATCH_EXPIRY_HOURS = 24` à partir de la création.
 - Score de compatibilité minimal pour créer un match : `60`.
+- La vérification de limite quotidienne compte désormais les occurrences où l'utilisateur apparaît en `user1` **ou** `user2`, évitant les duplications lors du batch quotidien.
 - Méthodes disponibles côté service pour la suite du produit (à exposer via routes dédiées) :
   - `findByUserId(userId)` : liste des matches actifs d'un utilisateur.
   - `findDailyMatch(userId, date)` : match quotidien pour une date.
@@ -96,7 +103,17 @@ export interface MatchResponse {
 | PATCH | `/matches/:id` | Admin uniquement | `UpdateMatchDto` | `MatchResponse` |
 | DELETE | `/matches/:id` | Admin uniquement | — | `204 No Content` (soft delete `isActive=false`) |
 
-> ⚠️ Pour un front utilisateur, prévoir d'exposer au moins : liste des matches de l'utilisateur courant, accept/reject, récupération d'un match quotidien.
+#### Endpoints utilisateur exposés
+
+| Méthode | Route | Auth | Body | Réponse | Notes |
+| --- | --- | --- | --- | --- | --- |
+| GET | `/matches/me` | Session BetterAuth | — | `MatchResponse[]` (récents en premier) | Retourne toutes les paires actives/acceptées de l'utilisateur courant. |
+| GET | `/matches/daily?date=YYYY-MM-DD` | Session BetterAuth | — | `MatchResponse \| null` | Par défaut, `date` = aujourd'hui (UTC). |
+| POST | `/matches/:id/accept` | Session BetterAuth | — | `MatchResponse` | Consigne `userXAcceptedAt`. Le statut ne passe à `accepted` qu'après les deux réponses. |
+| POST | `/matches/:id/reject` | Session BetterAuth | — | `MatchResponse` | Consigne `userXRejectedAt` et passe le match en `rejected`. |
+| POST | `/matches/:id/cancel` | Session BetterAuth | — | `MatchResponse` | Pour annuler mutuellement un match encore `pending`. |
+
+> ⚠️ `MatchResponse` inclut désormais les champs `user1AcceptedAt`, `user2AcceptedAt`, `user1RejectedAt`, `user2RejectedAt` pour aider le front à afficher “en attente de l'autre”.
 
 ## Système de conversations & messages
 
@@ -141,6 +158,28 @@ export interface ConversationResponse {
   hasUnreadMessages: boolean;
 }
 ```
+
+### Endpoints REST conversations
+
+| Méthode | Route | Auth | Body | Retour | Notes |
+| --- | --- | --- | --- | --- | --- |
+| POST | `/conversations` | Admin uniquement | `CreateConversationDto` | `ConversationResponse` | Création manuelle (debug/admin). |
+| GET | `/conversations` | Admin uniquement | — | `ConversationResponse[]` | Filtrage/CRUD interne. |
+| GET | `/conversations/:id` | Admin uniquement | — | `ConversationResponse` | Lecture par ID. |
+| PATCH | `/conversations/:id` | Admin uniquement | `UpdateConversationDto` | `ConversationResponse` | Mise à jour globale. |
+| DELETE | `/conversations/:id` | Admin uniquement | — | `204 No Content` | Soft delete (`isActive=false`). |
+
+#### Endpoints utilisateur
+
+| Méthode | Route | Auth | Body | Retour | Notes |
+| --- | --- | --- | --- | --- | --- |
+| GET | `/conversations/me` | Session BetterAuth | — | `ConversationResponse[]` | Liste toutes les conversations de l'utilisateur (ordre `lastMessageAt DESC`). |
+| GET | `/conversations/active/me` | Session BetterAuth | — | `ConversationResponse \| null` | Retourne la conversation quotidienne en cours s'il y en a une. |
+| POST | `/conversations/from-match/:matchId` | Session BetterAuth | — | `ConversationResponse` | Instancie une conversation après acceptation mutuelle. L'utilisateur doit être participant du match. |
+| POST | `/conversations/:id/extend` | Session BetterAuth | — | `ConversationResponse` | Ajoute +24h (max 3 fois) si `canBeExtended=true`. |
+| POST | `/conversations/:id/close` | Session BetterAuth | — | `ConversationResponse` | Clôture volontaire de la conversation. |
+| POST | `/conversations/:id/archive` | Session BetterAuth | — | `ConversationResponse` | Archive l'historique (statut `archived`). |
+| POST | `/conversations/:id/read` | Session BetterAuth | — | `ConversationResponse` | Met à jour `isReadByUserX` et `metadata.userXLastSeen`. |
 
 ```ts
 // src/messages/entities/message.entity.ts
@@ -200,13 +239,15 @@ export interface MessageResponse {
 | PATCH | `/messages/:id` | — | `UpdateMessageDto` | `MessageResponse` | Autorisé uniquement à l'auteur, < 5 min, message non supprimé. |
 | DELETE | `/messages/:id` | — | — | `MessageResponse` | Soft delete : `content` devient `"[Message deleted]"`. |
 
+> 🔁 L'endpoint `GET /messages` retourne aussi les messages soft-supprimés. Utiliser `isDeleted` et le contenu standardisé `"[Message deleted]"` pour l'affichage.
+
 Fonctions supplémentaires côté service auxquelles raccorder le front :
 
-- `markConversationAsRead(conversationId, userId)` (déjà appelé via WS `message.read`).
+- `markConversationAsRead(conversationId, userId)` (déjà appelé via WS `message.read`) met à jour les statuts `isReadByUserX` et `metadata.userXLastSeen` en plus de passer les messages en `read`.
 - `searchMessages(query, userId, conversationId?, limit?)` pour recherche texte.
 - `getUnreadCount(userId)` & `getUnreadCountForConversation(conversationId, userId)`.
 
-> ⚠️ Les endpoints `conversations` existants sont actuellement limités au rôle `admin`. Prévoir une route utilisateur pour lister les conversations actives (`findByUserId`) et pour prolonger / fermer (`extendConversation`, `closeConversation`, `archiveConversation`, `markAsRead`).
+> ℹ️ Toutes les opérations utilisateur (`findByUserId`, `extendConversation`, `closeConversation`, `archiveConversation`, `markAsRead`, `createFromMatch`) sont désormais exposées via les routes décrites ci-dessus.
 
 ## WebSocket temps-réel (Socket.IO namespace `/chat`)
 
@@ -225,7 +266,7 @@ Fonctions supplémentaires côté service auxquelles raccorder le front :
 | `message.send` | `CreateMessageDto` | Crée un message. Retour `{ status: 'ok', message: MessageResponse }`. Rejoint automatiquement la room si pas déjà membre. |
 | `message.update` | `{ messageId: string; update: UpdateMessageDto }` | Met à jour un message (mêmes règles que REST). Retour `{ status: 'ok', message: MessageResponse }`. |
 | `message.delete` | `{ messageId: string }` | Supprime un message (soft delete). Retour `{ status: 'ok', message: MessageResponse }`. |
-| `message.read` | `{ conversationId: string }` | Marque la conversation comme lue pour l'utilisateur courant. Retour `{ status: 'ok', conversationId }`. |
+| `message.read` | `{ conversationId: string }` | Marque la conversation comme lue (messages + `isReadByUserX`, `metadata.userXLastSeen`). Retour `{ status: 'ok', conversationId }`. |
 
 Les payloads sont validés côté serveur via `ValidationPipe` (whitelist + transformation), donc envoyer uniquement les champs déclarés.
 
@@ -265,7 +306,7 @@ Les payloads sont validés côté serveur via `ValidationPipe` (whitelist + tran
 
 ## Points d'attention pour la suite
 
-- Exposer des routes utilisateur pour : accepter/refuser un match, lister les matches actifs, lister/étendre/clore les conversations.
+- Brancher le front Expo sur les nouvelles routes utilisateur (matches + conversations) pour se passer du proxy admin.
 - Ajouter des garde-fous côté API (`rate limiting`, validation `matchDate` vs timezone) avant mise en prod.
 - Prévoir un mapping client pour afficher les `MatchStatus` et `MessageStatus` (ex: badge "En attente") et formater les durées (`timeUntilExpiry`).
 - Si l'app Expo doit gérer la reconnexion Socket.IO, réémettre `conversation.join` après chaque reconnect.

@@ -7,11 +7,11 @@ import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import { StatusBar } from "expo-status-bar";
 import {
-	CaretRight,
-	Flame,
-	Lightning,
-	Sparkle,
-	SunHorizon,
+	CaretRightIcon,
+	FlameIcon,
+	LightningIcon,
+	SparkleIcon,
+	SunHorizonIcon,
 } from "phosphor-react-native";
 import { useCallback, useMemo } from "react";
 import type { ColorValue, ViewStyle } from "react-native";
@@ -73,6 +73,8 @@ export default function HomeScreen() {
 	const statusBarStyle = resolvedTheme === "dark" ? "light" : "dark";
 
 	const appUser = session?.user as SessionUser | undefined;
+	console.log("session.user:", session?.user);
+
 	const firstName =
 		typeof appUser?.firstName === "string" ? appUser.firstName : "Alex";
 	const streak = typeof appUser?.streak === "number" ? appUser.streak : 7;
@@ -160,7 +162,7 @@ function HeroCard({
 	return (
 		<View className="overflow-hidden rounded-[32px] border border-outline-100 bg-white/95 p-6 dark:border-white/10 dark:bg-white/5">
 			<View className="flex-row items-center gap-2">
-				<Flame size={18} weight="fill" color="#E08AA4" />
+				<FlameIcon size={18} weight="fill" color="#E08AA4" />
 				<Text className="text-xs uppercase tracking-[2px] text-typography-500 dark:text-typography-400">
 					{streak} jours
 				</Text>
@@ -234,13 +236,13 @@ function MatchButton({
 					style={[styles.matchButton, shadowStyle, { borderColor }]}
 				>
 					<View className="flex-row items-center gap-2">
-						<Lightning size={36} weight="fill" color={iconColor} />
+						<LightningIcon size={36} weight="fill" color={iconColor} />
 						<Text className="text-2xl font-semibold text-typography-900 dark:text-typography-white">
 							<Trans id="home-screen.cta">Matcher</Trans>
 						</Text>
 					</View>
 					<View className="mt-5 flex-row items-center gap-2 rounded-full bg-white/60 px-3 py-1 dark:bg-black/20">
-						<Sparkle size={14} weight="fill" color={iconColor} />
+						<SparkleIcon size={14} weight="fill" color={iconColor} />
 						<Text className="text-[11px] tracking-[1.4px] text-typography-700 dark:text-typography-white/80">
 							<Trans id="home-screen.cta-tag">Connection du jour</Trans>
 						</Text>
@@ -264,7 +266,7 @@ function MoodCard({ mood }: { mood: string }) {
 					</Text>
 				</View>
 				<View className="rounded-full bg-background-100 p-3 dark:bg-white/5">
-					<SunHorizon size={22} weight="bold" color="#E6BF63" />
+					<SunHorizonIcon size={22} weight="bold" color="#E6BF63" />
 				</View>
 			</View>
 			<View className="mt-4 flex-row items-center gap-2">
@@ -273,37 +275,7 @@ function MoodCard({ mood }: { mood: string }) {
 						Ajuste tes intentions dans tes préférences.
 					</Trans>
 				</Text>
-				<CaretRight size={16} weight="bold" color="#E08AA4" />
-			</View>
-		</View>
-	);
-}
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function InterestsCard({ interests }: { interests: string[] }) {
-	const palettes = [
-		"bg-accentRose-500/20",
-		"bg-accentGold-400/20",
-		"bg-tertiary-500/20",
-	];
-	return (
-		<View className="overflow-hidden rounded-[28px] border border-outline-100 bg-white/95 p-6 dark:border-white/10 dark:bg-black/40">
-			<Text className="text-[11px] uppercase tracking-[2px] text-typography-500 dark:text-typography-400">
-				<Trans id="home-screen.interests.label">Tes centres d&apos;intérêt</Trans>
-			</Text>
-			<View className="mt-4 flex-row flex-wrap gap-2">
-				{interests.map((interest, index) => (
-					<View
-						key={interest}
-						className={`rounded-full border border-outline-100 px-3 py-1 dark:border-white/10 ${
-							palettes[index % palettes.length]
-						}`}
-					>
-						<Text className="text-xs text-typography-900 dark:text-typography-white">
-							{interest}
-						</Text>
-					</View>
-				))}
+				<CaretRightIcon size={16} weight="bold" color="#E08AA4" />
 			</View>
 		</View>
 	);
