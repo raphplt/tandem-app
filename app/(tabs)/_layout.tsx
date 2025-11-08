@@ -49,7 +49,7 @@ export default function TabLayout() {
 				name="index"
 				options={{
 					tabBarLabel: () => (
-						<Text>
+						<Text className="text-typography-900 dark:text-typography-100">
 							<Trans id="tabs.home">Home</Trans>
 						</Text>
 					),
@@ -60,7 +60,7 @@ export default function TabLayout() {
 				name="messages"
 				options={{
 					tabBarLabel: () => (
-						<Text>
+						<Text className="text-typography-900 dark:text-typography-100">
 							<Trans id="tabs.messages">Messages</Trans>
 						</Text>
 					),
@@ -71,7 +71,7 @@ export default function TabLayout() {
 				name="settings"
 				options={{
 					tabBarLabel: () => (
-						<Text>
+						<Text className="text-typography-900 dark:text-typography-100">
 							<Trans id="tabs.settings">Settings</Trans>
 						</Text>
 					),
