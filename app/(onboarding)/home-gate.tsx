@@ -50,7 +50,7 @@ export default function HomeGateScreen() {
 			title={<Trans id="onboarding.homeGate.title">Tout est prêt</Trans>}
 			subtitle={
 				<Trans id="onboarding.homeGate.subtitle">
-					Nous récupérons ton profil côté Solow et préparons ton premier match.
+					Nous récupérons ton profil côté WeTwo et préparons ton premier match.
 				</Trans>
 			}
 		>

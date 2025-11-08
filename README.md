@@ -48,8 +48,8 @@ The app expects a Better Auth backend reachable at `EXPO_PUBLIC_AUTH_BASE_URL` (
 
 ```
 EXPO_PUBLIC_AUTH_BASE_URL=https://your-api.example.com/api/auth
-EXPO_PUBLIC_AUTH_STORAGE_PREFIX=solow
-EXPO_PUBLIC_APP_SCHEME=solow
+EXPO_PUBLIC_AUTH_STORAGE_PREFIX=wetwo
+EXPO_PUBLIC_APP_SCHEME=wetwo
 ```
 
 ## Join the community

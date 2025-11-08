@@ -1,4 +1,6 @@
 import { useAuthSession } from "@/hooks/use-auth-session";
+import { useColorScheme } from "@/hooks/use-color-scheme";
+import { useThemeStore } from "@/hooks/use-theme-store";
 import { Trans } from "@lingui/react/macro";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
@@ -24,16 +26,49 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 type GradientColors = [ColorValue, ColorValue, ...ColorValue[]];
 
-const heroGradient: GradientColors = ["#0A0A0B", "#121315", "#7A5400"];
-const primaryGlow: GradientColors = ["#F3B3C8", "#F8E9B8", "#D6A53A"];
-const reflectionGlow: GradientColors = [
-	"rgba(248, 233, 184, 0.28)",
-	"rgba(224, 138, 164, 0.32)",
-	"rgba(154, 106, 0, 0.30)",
-];
+type ThemeVariant = "light" | "dark";
+
+const heroGradients: Record<ThemeVariant, GradientColors> = {
+	dark: ["#0A0A0B", "#121315", "#7A5400"],
+	light: ["#FFF9F5", "#FFF1E6", "#F3B3C8"],
+};
+
+const primaryGlowGradients: Record<ThemeVariant, GradientColors> = {
+	dark: ["#F3B3C8", "#F8E9B8", "#D6A53A"],
+	light: ["#F7C5D8", "#FFE2AF", "#E6BF63"],
+};
+
+const matchButtonShadows: Record<ThemeVariant, ViewStyle> = {
+	dark: {
+		shadowColor: "#CF9A56",
+		shadowOpacity: 0.45,
+		shadowRadius: 28,
+		shadowOffset: { width: 0, height: 18 },
+	},
+	light: {
+		shadowColor: "#D6A53A",
+		shadowOpacity: 0.3,
+		shadowRadius: 24,
+		shadowOffset: { width: 0, height: 16 },
+	},
+};
 
 export default function HomeScreen() {
 	const { data: session, isLoading } = useAuthSession();
+	const { mode } = useThemeStore();
+	const colorScheme = useColorScheme();
+
+	const resolvedTheme: ThemeVariant =
+		(mode === "system" ? colorScheme ?? "light" : mode) === "dark"
+			? "dark"
+			: "light";
+	const heroGradient = heroGradients[resolvedTheme];
+	const primaryGlow = primaryGlowGradients[resolvedTheme];
+	const matchShadow = matchButtonShadows[resolvedTheme];
+	const matchButtonBorderColor =
+		resolvedTheme === "dark" ? "rgba(255,255,255,0.1)" : "rgba(122, 39, 66, 0.25)";
+	const statusBarStyle = resolvedTheme === "dark" ? "light" : "dark";
+
 	const appUser = session?.user as SessionUser | undefined;
 	const firstName =
 		typeof appUser?.firstName === "string" ? appUser.firstName : "Alex";
@@ -45,19 +80,6 @@ export default function HomeScreen() {
 			? appUser.status
 			: "Disponible pour matcher";
 
-	const interests = useMemo(() => {
-		const rawInterests = Array.isArray(appUser?.interests)
-			? appUser.interests
-			: [];
-		const normalized = rawInterests.filter(
-			(interest): interest is string => typeof interest === "string"
-		);
-		if (normalized.length) {
-			return normalized.slice(0, 4);
-		}
-		return ["Lecture", "Voyage", "Musique", "+1"];
-	}, [appUser?.interests]);
-
 	const greeting = useMemo(() => {
 		const hours = new Date().getHours();
 		if (hours < 12) return "home-screen.greeting.morning";
@@ -67,19 +89,19 @@ export default function HomeScreen() {
 
 	const handleMatchPress = useCallback(async () => {
 		await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-		Alert.alert("Solow", "Cette fonctionnalité arrive bientôt.");
+		Alert.alert("WeTwo", "Cette fonctionnalité arrive bientôt.");
 	}, []);
 
 	if (isLoading) {
 		return (
-			<View className="flex-1 items-center justify-center bg-background-950">
+			<View className="flex-1 items-center justify-center bg-background-0 dark:bg-background-950">
 				<ActivityIndicator size="large" />
 			</View>
 		);
 	}
 
 	return (
-		<View className="flex-1 bg-background-950">
+		<View className="flex-1 bg-background-0 dark:bg-background-950">
 			<LinearGradient
 				colors={heroGradient}
 				start={{ x: 0, y: 0 }}
@@ -87,7 +109,7 @@ export default function HomeScreen() {
 				style={StyleSheet.absoluteFillObject}
 			/>
 			{/* <View className="absolute inset-x-[-80px] top-24 h-72 rounded-full bg-accentRose-300/20 blur-3xl" /> */}
-			<StatusBar style="light" />
+			<StatusBar style={statusBarStyle} />
 			<SafeAreaView className="flex-1">
 				<View className="flex-1 justify-between gap-5 px-6 pb-8 pt-6">
 					<View className="flex-1 justify-between gap-8">
@@ -98,17 +120,22 @@ export default function HomeScreen() {
 							availability={availability}
 						/>
 						<View className="items-center">
-							<MatchButton onPress={handleMatchPress} />
-							<Text className="mt-8 text-center text-sm text-typography-300">
+							<MatchButton
+								onPress={handleMatchPress}
+								gradient={primaryGlow}
+								shadowStyle={matchShadow}
+								theme={resolvedTheme}
+								borderColor={matchButtonBorderColor}
+							/>
+							<Text className="mt-8 text-center text-sm text-typography-600 dark:text-typography-300">
 								<Trans id="home-screen.cta-hint">
 									Une seule conversation par jour. Fais-en un moment sincère.
 								</Trans>
 							</Text>
 						</View>
 					</View>
-					<View className="flex flex-col gap-4 mt-4">
+					<View className="mt-4 flex flex-col gap-4">
 						<MoodCard mood={mood} />
-						{/* <InterestsCard interests={interests} /> */}
 					</View>
 				</View>
 			</SafeAreaView>
@@ -128,35 +155,39 @@ function HeroCard({
 	availability: string;
 }) {
 	return (
-		<View className="overflow-hidden rounded-[32px] border border-white/10 bg-white/5 p-6">
+		<View className="overflow-hidden rounded-[32px] border border-outline-100 bg-white/95 p-6 dark:border-white/10 dark:bg-white/5">
 			<View className="flex-row items-center gap-2">
 				<Flame size={18} weight="fill" color="#E08AA4" />
-				<Text className="text-xs uppercase tracking-[2px] text-typography-400">
+				<Text className="text-xs uppercase tracking-[2px] text-typography-500 dark:text-typography-400">
 					{streak} jours
 				</Text>
 			</View>
-			<Text className="mt-5 font-heading text-[34px] leading-tight text-typography-white">
+			<Text className="mt-5 font-heading text-[34px] leading-tight text-typography-900 dark:text-typography-white">
 				<Trans id={greetingKey}>Bonsoir</Trans>, {name}
 			</Text>
-			<Text className="mt-3 text-base text-typography-200">
+			<Text className="mt-3 text-base text-typography-600 dark:text-typography-200">
 				<Trans id="home-screen.subtitle">
 					C&apos;est le moment de ta rencontre du jour.
 				</Trans>
 			</Text>
-			<View className="mt-6 flex-row items-center justify-between rounded-2xl border border-white/10 bg-black/30 px-4 py-3">
+			<View className="mt-6 flex-row items-center justify-between rounded-2xl border border-outline-100 bg-white/80 px-4 py-3 dark:border-white/10 dark:bg-black/30">
 				<View>
-					<Text className="text-[11px] uppercase tracking-[2px] text-typography-500">
+					<Text className="text-[11px] uppercase tracking-[2px] text-typography-500 dark:text-typography-500">
 						<Trans id="home-screen.status.label">Statut</Trans>
 					</Text>
-					<Text className="mt-1 text-sm text-typography-100">{availability}</Text>
+					<Text className="mt-1 text-sm text-typography-900 dark:text-typography-100">
+						{availability}
+					</Text>
 				</View>
 				<View className="items-end">
-					<Text className="text-[11px] uppercase tracking-[2px] text-typography-500">
+					<Text className="text-[11px] uppercase tracking-[2px] text-typography-500 dark:text-typography-500">
 						<Trans id="home-screen.timer.label">Prochain créneau</Trans>
 					</Text>
 					<View className="mt-1 flex-row items-baseline gap-2">
-						<Text className="text-lg font-semibold text-typography-white">14h12</Text>
-						<Text className="text-xs text-typography-400">
+						<Text className="text-lg font-semibold text-typography-900 dark:text-typography-white">
+							14h12
+						</Text>
+						<Text className="text-xs text-typography-500 dark:text-typography-400">
 							<Trans id="home-screen.timer.hint">après ta session</Trans>
 						</Text>
 					</View>
@@ -166,7 +197,22 @@ function HeroCard({
 	);
 }
 
-function MatchButton({ onPress }: { onPress: () => void }) {
+function MatchButton({
+	onPress,
+	gradient,
+	shadowStyle,
+	theme,
+	borderColor,
+}: {
+	onPress: () => void;
+	gradient: GradientColors;
+	shadowStyle: ViewStyle;
+	theme: ThemeVariant;
+	borderColor: string;
+}) {
+	const isDark = theme === "dark";
+	const iconColor = isDark ? "#FFFFFF" : "#7A2742";
+
 	return (
 		<Pressable
 			onPress={onPress}
@@ -174,23 +220,23 @@ function MatchButton({ onPress }: { onPress: () => void }) {
 			className="active:scale-95"
 		>
 			<View className="items-center justify-center">
-				<View className="absolute h-[260px] w-[260px] rounded-full bg-accentRose-200/15 blur-3xl" />
-				<View className="absolute h-[240px] w-[240px] rounded-full border border-white/5 bg-accentGold-400/10" />
+				<View className="absolute h-[260px] w-[260px] rounded-full bg-accentRose-100/60 blur-3xl dark:bg-accentRose-200/15" />
+				<View className="absolute h-[240px] w-[240px] rounded-full border border-accentGold-200/50 bg-white/70 dark:border-white/5 dark:bg-accentGold-400/10" />
 				<LinearGradient
-					colors={primaryGlow}
+					colors={gradient}
 					start={{ x: 0, y: 0 }}
 					end={{ x: 1, y: 1 }}
-					style={[styles.matchButton, matchShadow]}
+					style={[styles.matchButton, shadowStyle, { borderColor }]}
 				>
 					<View className="flex-row items-center gap-2">
-						<Lightning size={36} weight="fill" color="#FFFFFF" />
-						<Text className="text-2xl font-semibold text-typography-white">
+						<Lightning size={36} weight="fill" color={iconColor} />
+						<Text className="text-2xl font-semibold text-typography-900 dark:text-typography-white">
 							<Trans id="home-screen.cta">Matcher</Trans>
 						</Text>
 					</View>
-					<View className="mt-5 flex-row items-center gap-2 rounded-full bg-black/20 px-3 py-1">
-						<Sparkle size={14} weight="fill" color="#FFFFFF" />
-						<Text className="text-[11px] tracking-[1.4px] text-typography-white/80">
+					<View className="mt-5 flex-row items-center gap-2 rounded-full bg-white/60 px-3 py-1 dark:bg-black/20">
+						<Sparkle size={14} weight="fill" color={iconColor} />
+						<Text className="text-[11px] tracking-[1.4px] text-typography-700 dark:text-typography-white/80">
 							<Trans id="home-screen.cta-tag">Connection du jour</Trans>
 						</Text>
 					</View>
@@ -202,20 +248,22 @@ function MatchButton({ onPress }: { onPress: () => void }) {
 
 function MoodCard({ mood }: { mood: string }) {
 	return (
-		<View className="overflow-hidden rounded-[28px] border border-white/10 bg-black/40 p-6">
+		<View className="overflow-hidden rounded-[28px] border border-outline-100 bg-white/95 p-6 dark:border-white/10 dark:bg-black/40">
 			<View className="flex-row items-center justify-between">
 				<View>
-					<Text className="text-[11px] uppercase tracking-[2px] text-typography-500">
+					<Text className="text-[11px] uppercase tracking-[2px] text-typography-500 dark:text-typography-400">
 						<Trans id="home-screen.mode.label">Ton mode</Trans>
 					</Text>
-					<Text className="mt-2 text-xl text-typography-white">{mood}</Text>
+					<Text className="mt-2 text-xl text-typography-900 dark:text-typography-white">
+						{mood}
+					</Text>
 				</View>
-				<View className="rounded-full bg-white/5 p-3">
+				<View className="rounded-full bg-background-100 p-3 dark:bg-white/5">
 					<SunHorizon size={22} weight="bold" color="#E6BF63" />
 				</View>
 			</View>
 			<View className="mt-4 flex-row items-center gap-2">
-				<Text className="text-xs text-typography-400">
+				<Text className="text-xs text-typography-600 dark:text-typography-400">
 					<Trans id="home-screen.mode.hint">
 						Ajuste tes intentions dans tes préférences.
 					</Trans>
@@ -226,6 +274,7 @@ function MoodCard({ mood }: { mood: string }) {
 	);
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function InterestsCard({ interests }: { interests: string[] }) {
 	const palettes = [
 		"bg-accentRose-500/20",
@@ -233,19 +282,21 @@ function InterestsCard({ interests }: { interests: string[] }) {
 		"bg-tertiary-500/20",
 	];
 	return (
-		<View className="overflow-hidden rounded-[28px] border border-white/10 bg-black/40 p-6">
-			<Text className="text-[11px] uppercase tracking-[2px] text-typography-500">
+		<View className="overflow-hidden rounded-[28px] border border-outline-100 bg-white/95 p-6 dark:border-white/10 dark:bg-black/40">
+			<Text className="text-[11px] uppercase tracking-[2px] text-typography-500 dark:text-typography-400">
 				<Trans id="home-screen.interests.label">Tes centres d&apos;intérêt</Trans>
 			</Text>
 			<View className="mt-4 flex-row flex-wrap gap-2">
 				{interests.map((interest, index) => (
 					<View
 						key={interest}
-						className={`rounded-full border border-white/10 px-3 py-1 ${
+						className={`rounded-full border border-outline-100 px-3 py-1 dark:border-white/10 ${
 							palettes[index % palettes.length]
 						}`}
 					>
-						<Text className="text-xs text-typography-white">{interest}</Text>
+						<Text className="text-xs text-typography-900 dark:text-typography-white">
+							{interest}
+						</Text>
 					</View>
 				))}
 			</View>
@@ -259,13 +310,6 @@ type SessionUser = {
 	mode?: unknown;
 	status?: unknown;
 	interests?: unknown;
-};
-
-const matchShadow: ViewStyle = {
-	shadowColor: "#CF9A56",
-	shadowOpacity: 0.45,
-	shadowRadius: 28,
-	shadowOffset: { width: 0, height: 18 },
 };
 
 const styles = StyleSheet.create({

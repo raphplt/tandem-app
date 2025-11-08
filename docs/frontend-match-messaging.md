@@ -1,8 +1,10 @@
 # Guide API Match & Messages (frontend Expo)
 
+Ce guide permet de décrire le fonctionnement actuel du système de matching et de messagerie temps-réel côté API, ainsi que les endpoints REST et événements WebSocket disponibles pour le front Expo/React Native.
+
 ## Authentification & formats
 
-- Toutes les routes REST exposées ici utilisent `AuthGuard` (session BetterAuth). Le client Expo doit envoyer les cookies de session, ou le header `Authorization: Bearer <token>` si configuré côté BetterAuth.
+- Toutes les routes REST exposées ici utilisent `AuthGuard` (session BetterAuth). Le client Expo doit envoyer le header `Authorization: Bearer <token>` configuré côté BetterAuth.
 - Les routes `matches` sont protégées par `RolesGuard` avec le rôle `admin`. Pour un usage utilisateur, de nouveaux endpoints devront être ajoutés ou un proxy doit être prévu.
 - Les routes `messages` utilisent `OwnershipGuard` : l'utilisateur connecté doit être membre de la conversation associée.
 - Toutes les dates sont renvoyées en ISO 8601 (`string` côté HTTP). Les nombres décimaux (`compatibilityScore`) sont sérialisés en chaîne JSON.

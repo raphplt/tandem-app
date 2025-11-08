@@ -154,7 +154,7 @@ export default function SettingsScreen() {
 			},
 			{
 				key: "preferences",
-				title: <Trans id="settings-screen.preferences">Préférences Tandem</Trans>,
+				title: <Trans id="settings-screen.preferences">Préférences WeTwo</Trans>,
 				subtitle: (
 					<Trans id="settings-screen.preferences.description">
 						Affiche les centres d’intérêt et valeurs que tu partages.
@@ -337,11 +337,8 @@ export default function SettingsScreen() {
 	);
 
 	return (
-		<SafeAreaView className="flex-1 bg-background-0 px-6 pb-6 dark:bg-background-dark">
-			<ScrollView
-				contentContainerStyle={{ paddingBottom: 32 }}
-				showsVerticalScrollIndicator={false}
-			>
+		<SafeAreaView className="flex-1 bg-background-0 px-6 dark:bg-background-dark">
+			<ScrollView showsVerticalScrollIndicator={false}>
 				<Text className="mb-6 text-3xl font-bold text-typography-900 dark:text-typography-50">
 					<Trans id="settings-screen.title">Profil & paramètres</Trans>
 				</Text>
@@ -353,101 +350,101 @@ export default function SettingsScreen() {
 						<View className="flex-row items-start justify-between">
 							<View className="flex-row items-center gap-4">
 								<View className="h-20 w-20 items-center justify-center overflow-hidden rounded-full border-2 border-accentGold-400 bg-white dark:border-accentGold-600 dark:bg-zinc-900">
-								{profile?.photoUrl ? (
-									<Image
-										source={{ uri: profile.photoUrl }}
-										style={{ width: "100%", height: "100%" }}
-										contentFit="cover"
-									/>
-								) : (
-									<Text className="text-xl font-semibold text-accentGold-700 dark:text-accentGold-200">
-										{initials}
+									{profile?.photoUrl ? (
+										<Image
+											source={{ uri: profile.photoUrl }}
+											style={{ width: "100%", height: "100%" }}
+											contentFit="cover"
+										/>
+									) : (
+										<Text className="text-xl font-semibold text-accentGold-700 dark:text-accentGold-200">
+											{initials}
+										</Text>
+									)}
+								</View>
+								<View className="flex-col gap-1">
+									<Text className="text-2xl font-semibold text-typography-900 dark:text-typography-50">
+										{displayName}
 									</Text>
-								)}
+									<Text className="text-sm text-typography-500 dark:text-typography-300">
+										{session?.user?.email}
+									</Text>
+								</View>
 							</View>
-							<View className="flex-col gap-1">
-								<Text className="text-2xl font-semibold text-typography-900 dark:text-typography-50">
-									{displayName}
-								</Text>
-								<Text className="text-sm text-typography-500 dark:text-typography-300">
-									{session?.user?.email}
-								</Text>
-							</View>
-						</View>
-						<TouchableOpacity
-							onPress={() => router.push("/(onboarding)/photos" as never)}
-							className="rounded-full border border-accentRose-400 bg-accentRose-100/80 px-4 py-2 dark:border-accentRose-700 dark:bg-accentRose-900/30"
-						>
-							<View className="flex-row items-center gap-2">
-								<PencilSimpleLine size={18} color="#7A2742" weight="bold" />
-								<Text className="text-sm font-medium text-accentRose-700 dark:text-accentRose-200">
-									<Trans id="settings-screen.update-photo">Modifier</Trans>
-								</Text>
-							</View>
-						</TouchableOpacity>
-					</View>
-
-					<View className="mt-6 flex-row flex-wrap gap-3">
-						{profile?.age ? (
-							<View className="rounded-full bg-accentGold-100/80 px-4 py-1.5 dark:bg-accentGold-900/30">
-								<Text className="text-xs font-semibold text-accentGold-700 dark:text-accentGold-200">
-									{profile.age} <Trans id="settings-screen.years">ans</Trans>
-								</Text>
-							</View>
-						) : null}
-						{profile?.city ? (
-							<View className="rounded-full bg-accentRose-100/80 px-4 py-1.5 dark:bg-accentRose-900/30">
-								<Text className="text-xs font-semibold text-accentRose-700 dark:text-accentRose-200">
-									{profile.city}
-								</Text>
-							</View>
-						) : null}
-						{profile?.country ? (
-							<View className="rounded-full bg-accentGold-100/60 px-4 py-1.5 dark:bg-accentGold-900/30">
-								<Text className="text-xs font-semibold text-accentGold-700 dark:text-accentGold-200">
-									{profile.country}
-								</Text>
-							</View>
-						) : null}
-					</View>
-
-					{profile?.bio ? (
-						<Text className="mt-4 text-sm text-typography-600 dark:text-typography-300">
-							{profile.bio}
-						</Text>
-					) : null}
-
-					<View className="mt-6 flex-row justify-between gap-3">
-						{stats.map((item) => (
-							<View
-								key={item.key}
-								className={`flex-1 items-center rounded-2xl border px-4 py-3 ${
-									item.tone === "rose"
-										? "border-accentRose-200 bg-accentRose-50/80 dark:border-accentRose-800/60 dark:bg-accentRose-900/30"
-										: "border-accentGold-200 bg-accentGold-50/80 dark:border-accentGold-800/60 dark:bg-accentGold-900/30"
-								}`}
+							<TouchableOpacity
+								onPress={() => router.push("/(onboarding)/photos" as never)}
+								className="rounded-full border border-accentRose-400 bg-accentRose-100/80 px-4 py-2 dark:border-accentRose-700 dark:bg-accentRose-900/30"
 							>
-								<Text
-									className={`text-xl font-semibold ${
+								<View className="flex-row items-center gap-2">
+									<PencilSimpleLine size={18} color="#7A2742" weight="bold" />
+									<Text className="text-sm font-medium text-accentRose-700 dark:text-accentRose-200">
+										<Trans id="settings-screen.update-photo">Modifier</Trans>
+									</Text>
+								</View>
+							</TouchableOpacity>
+						</View>
+
+						<View className="mt-6 flex-row flex-wrap gap-3">
+							{profile?.age ? (
+								<View className="rounded-full bg-accentGold-100/80 px-4 py-1.5 dark:bg-accentGold-900/30">
+									<Text className="text-xs font-semibold text-accentGold-700 dark:text-accentGold-200">
+										{profile.age} <Trans id="settings-screen.years">ans</Trans>
+									</Text>
+								</View>
+							) : null}
+							{profile?.city ? (
+								<View className="rounded-full bg-accentRose-100/80 px-4 py-1.5 dark:bg-accentRose-900/30">
+									<Text className="text-xs font-semibold text-accentRose-700 dark:text-accentRose-200">
+										{profile.city}
+									</Text>
+								</View>
+							) : null}
+							{profile?.country ? (
+								<View className="rounded-full bg-accentGold-100/60 px-4 py-1.5 dark:bg-accentGold-900/30">
+									<Text className="text-xs font-semibold text-accentGold-700 dark:text-accentGold-200">
+										{profile.country}
+									</Text>
+								</View>
+							) : null}
+						</View>
+
+						{profile?.bio ? (
+							<Text className="mt-4 text-sm text-typography-600 dark:text-typography-300">
+								{profile.bio}
+							</Text>
+						) : null}
+
+						<View className="mt-6 flex-row justify-between gap-3">
+							{stats.map((item) => (
+								<View
+									key={item.key}
+									className={`flex-1 items-center rounded-2xl border px-4 py-3 ${
 										item.tone === "rose"
-											? "text-accentRose-700 dark:text-accentRose-200"
-											: "text-accentGold-700 dark:text-accentGold-200"
+											? "border-accentRose-200 bg-accentRose-50/80 dark:border-accentRose-800/60 dark:bg-accentRose-900/30"
+											: "border-accentGold-200 bg-accentGold-50/80 dark:border-accentGold-800/60 dark:bg-accentGold-900/30"
 									}`}
 								>
-									{item.value}
-								</Text>
-								<Text
-									className={`text-xs uppercase tracking-wide ${
-										item.tone === "rose"
-											? "text-accentRose-600 dark:text-accentRose-300"
-											: "text-accentGold-600 dark:text-accentGold-300"
-									}`}
-								>
-									{item.label}
-								</Text>
-							</View>
-						))}
-					</View>
+									<Text
+										className={`text-xl font-semibold ${
+											item.tone === "rose"
+												? "text-accentRose-700 dark:text-accentRose-200"
+												: "text-accentGold-700 dark:text-accentGold-200"
+										}`}
+									>
+										{item.value}
+									</Text>
+									<Text
+										className={`text-xs uppercase tracking-wide ${
+											item.tone === "rose"
+												? "text-accentRose-600 dark:text-accentRose-300"
+												: "text-accentGold-600 dark:text-accentGold-300"
+										}`}
+									>
+										{item.label}
+									</Text>
+								</View>
+							))}
+						</View>
 					</View>
 				</Box>
 
@@ -456,7 +453,7 @@ export default function SettingsScreen() {
 					tone="gold"
 					description={
 						<Trans id="settings-screen.section.account.description">
-							Garde ton profil à jour et gère tes paramètres Tandem.
+							Garde ton profil à jour et gère tes paramètres WeTwo.
 						</Trans>
 					}
 					items={accountItems}
@@ -526,7 +523,7 @@ export default function SettingsScreen() {
 					title={<Trans id="settings-screen.section.support">Aide & support</Trans>}
 					description={
 						<Trans id="settings-screen.section.support.description">
-							Retrouve de l’aide ou contacte l’équipe Tandem.
+							Retrouve de l’aide ou contacte l’équipe WeTwo.
 						</Trans>
 					}
 					items={supportItems}
@@ -536,7 +533,7 @@ export default function SettingsScreen() {
 					title={<Trans id="settings-screen.section.danger">Déconnexion</Trans>}
 					description={
 						<Trans id="settings-screen.section.danger.description">
-							Se déconnecter de ton compte Tandem sur cet appareil.
+							Se déconnecter de ton compte WeTwo sur cet appareil.
 						</Trans>
 					}
 					items={[

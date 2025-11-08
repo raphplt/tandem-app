@@ -1,4 +1,4 @@
-# Solow Onboarding (Expo) — Implementation Notes
+# WeTwo Onboarding (Expo) — Implementation Notes
 
 ## Aperçu
 

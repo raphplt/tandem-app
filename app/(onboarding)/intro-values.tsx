@@ -68,7 +68,7 @@ export default function IntroValuesScreen() {
 			<View className="flex flex-col" style={{ gap: 16 }}>
 				<Text className="text-center text-base font-body text-typography-500 dark:text-zinc-400">
 					<Trans id="onboarding.intro.value1">
-						Solow ralentit les choses pour que chaque échange compte.
+						WeTwo ralentit les choses pour que chaque échange compte.
 					</Trans>
 				</Text>
 				<Text className="text-center text-base font-body text-typography-500 dark:text-zinc-400">

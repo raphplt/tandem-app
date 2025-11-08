@@ -63,9 +63,7 @@ export default function AuthEmailSigninScreen() {
 
 	return (
 		<OnboardingShell
-			title={
-				<Trans id="onboarding.auth.email.login.title">Connexion Tandem</Trans>
-			}
+			title={<Trans id="onboarding.auth.email.login.title">Connexion WeTwo</Trans>}
 			subtitle={
 				<Trans id="onboarding.auth.email.login.subtitle">
 					Renseigne ton email et ton mot de passe pour retrouver ton compte.
@@ -77,7 +75,7 @@ export default function AuthEmailSigninScreen() {
 					onPress={handleSubmit}
 					disabled={isButtonDisabled}
 					loading={loading}
-					accessibilityLabel="Connexion à Tandem"
+					accessibilityLabel="Connexion à WeTwo"
 				/>
 			}
 		>

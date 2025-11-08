@@ -1,16 +1,16 @@
 {
   "expo": {
-			"name": "solow",
+			"name": "wetwo",
 			"slug": "tandem",
 			"version": "1.0.0",
 			"orientation": "portrait",
 			"icon": "./assets/images/icon.png",
-			"scheme": "solow",
+			"scheme": "wetwo",
 			"userInterfaceStyle": "automatic",
 			"newArchEnabled": true,
 			"ios": {
 				"supportsTablet": true,
-				"bundleIdentifier": "com.raphplt.solow",
+				"bundleIdentifier": "com.raphplt.wetwo",
 				"infoPlist": {
 					"ITSAppUsesNonExemptEncryption": false
 				}
@@ -24,7 +24,7 @@
 				},
 				"edgeToEdgeEnabled": true,
 				"predictiveBackGestureEnabled": false,
-				"package": "com.raphaeltkorp.solow"
+				"package": "com.raphaeltkorp.wetwo"
 			},
 			"web": {
 				"output": "static",

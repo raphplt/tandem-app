@@ -93,7 +93,7 @@ export default function RootLayout() {
 				<I18nProvider i18n={i18n}>
 					<QueryProvider>
 						<AuthProvider>
-							<Stack>
+							<Stack screenOptions={{ headerShown: false }}>
 								<Stack.Screen name="(tabs)" options={{ headerShown: false }} />
 								<Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
 							</Stack>

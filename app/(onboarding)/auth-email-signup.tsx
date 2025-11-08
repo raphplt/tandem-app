@@ -78,7 +78,7 @@ export default function AuthEmailSignupScreen() {
 	return (
 		<OnboardingShell
 			title={
-				<Trans id="onboarding.auth.email.title">Finalise ton compte Tandem</Trans>
+				<Trans id="onboarding.auth.email.title">Finalise ton compte WeTwo</Trans>
 			}
 			subtitle={
 				<Trans id="onboarding.auth.email.subtitle">
@@ -92,7 +92,7 @@ export default function AuthEmailSignupScreen() {
 					onPress={handleSubmit}
 					disabled={isButtonDisabled}
 					loading={loading}
-					accessibilityLabel="Créer mon compte Tandem"
+					accessibilityLabel="Créer mon compte WeTwo"
 				/>
 			}
 		>

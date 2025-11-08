@@ -27,7 +27,7 @@ export const env = {
 		process.env.EXPO_PUBLIC_AUTH_STORAGE_PREFIX ??
 		extra?.eas?.projectId ??
 		expoConfig?.slug,
-	appScheme: process.env.EXPO_PUBLIC_APP_SCHEME ?? fallbackScheme ?? "solow",
+	appScheme: process.env.EXPO_PUBLIC_APP_SCHEME ?? fallbackScheme ?? "wetwo",
 };
 
 

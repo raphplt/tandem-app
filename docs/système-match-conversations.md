@@ -1,8 +1,8 @@
-# Système de Match et Conversations - Documentation Solow
+# Système de Match et Conversations - Documentation WeTwo
 
 ## Vue d'ensemble
 
-Le système Solow est conçu autour de deux concepts principaux :
+Le système WeTwo est conçu autour de deux concepts principaux :
 
 1. **Le système de Match** : Algorithme d'appariement quotidien basé sur la compatibilité
 2. **Le système de Conversations** : Échanges en temps réel via Socket.IO avec gestion de l'expiration

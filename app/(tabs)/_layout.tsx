@@ -71,7 +71,7 @@ export default function TabLayout() {
 				name="settings"
 				options={{
 					tabBarLabel: () => (
-						<Text className="text-typography-900 dark:text-typography-100">
+						<Text>
 							<Trans id="tabs.settings">Settings</Trans>
 						</Text>
 					),
