@@ -1,7 +1,7 @@
 {
   "expo": {
 			"name": "wetwo",
-			"slug": "tandem",
+			"slug": "wetwo",
 			"version": "1.0.0",
 			"orientation": "portrait",
 			"icon": "./assets/images/icon.png",
@@ -24,7 +24,7 @@
 				},
 				"edgeToEdgeEnabled": true,
 				"predictiveBackGestureEnabled": false,
-				"package": "com.raphaeltkorp.wetwo"
+				"package": "com.raphplt.wetwo"
 			},
 			"web": {
 				"output": "static",
@@ -57,10 +57,7 @@
 				"reactCompiler": true
 			},
 			"extra": {
-				"router": {},
-				"eas": {
-					"projectId": "aee6869c-2965-4842-a748-7720f87675eb"
-				}
+				"router": {}
 			},
 			"owner": "raphplt"
 		}
