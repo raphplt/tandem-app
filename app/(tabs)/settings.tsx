@@ -1,5 +1,6 @@
 import { Trans } from "@lingui/react/macro";
 import { Image } from "expo-image";
+import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import {
 	CaretRight,
@@ -12,7 +13,7 @@ import {
 	SignOut as SignOutIcon,
 } from "phosphor-react-native";
 import { useMemo, useState, type ReactNode } from "react";
-import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Box } from "@/components/ui/box";
@@ -24,6 +25,12 @@ import { useMyProfile } from "@/src/hooks/use-profiles";
 import { getImageUrl } from "@/utils/image";
 
 type AccentTone = "gold" | "rose" | "primary";
+
+const toneGradientMap: Record<AccentTone, [string, string, string]> = {
+	gold: ["rgba(255, 245, 231, 0.95)", "rgba(255, 236, 210, 0.65)", "rgba(255, 255, 255, 0.08)"],
+	rose: ["rgba(255, 240, 246, 0.95)", "rgba(255, 230, 238, 0.65)", "rgba(255, 255, 255, 0.08)"],
+	primary: ["rgba(244, 241, 255, 0.95)", "rgba(229, 238, 255, 0.6)", "rgba(255, 255, 255, 0.08)"],
+};
 
 export default function SettingsScreen() {
 	const { mode, setMode } = useThemeStore();
@@ -269,84 +276,100 @@ export default function SettingsScreen() {
 		}[];
 		children?: ReactNode;
 		tone?: AccentTone;
-	}) => (
-		<Box
-			className={`mb-6 rounded-3xl border px-5 py-6 ${(() => {
-				switch (tone) {
-					case "gold":
-						return "border-accentGold-200 bg-accentGold-50/80 dark:border-accentGold-800/60 dark:bg-accentGold-900/30";
-					case "rose":
-						return "border-accentRose-200 bg-accentRose-50/80 dark:border-accentRose-800/60 dark:bg-accentRose-900/30";
-					default:
-						return "border-outline-100 bg-white/95 dark:border-outline-800 dark:bg-zinc-900/85";
-				}
-			})()}`}
-		>
-			<View className="flex flex-col gap-2">
-				<Text className="text-lg font-semibold text-typography-900 dark:text-typography-50">
-					{title}
-				</Text>
-				{description ? (
-					<Text className="text-sm text-typography-600 dark:text-typography-300">
-						{description}
+	}) => {
+		const toneClasses = (() => {
+			switch (tone) {
+				case "gold":
+					return "border-accentGold-200 dark:border-accentGold-700";
+				case "rose":
+					return "border-accentRose-200 dark:border-accentRose-700";
+				default:
+					return "border-outline-100 dark:border-outline-800";
+			}
+		})();
+		return (
+			<Box
+				className={`relative mb-6 overflow-hidden rounded-3xl border bg-white/95 px-5 py-6 dark:bg-zinc-900/80 ${toneClasses}`}
+			>
+				<LinearGradient
+					pointerEvents="none"
+					start={{ x: 0, y: 0 }}
+					end={{ x: 1, y: 1 }}
+					colors={toneGradientMap[tone]}
+					style={styles.gradientOverlay}
+				/>
+				<View className="relative flex flex-col gap-2">
+					<Text className="text-lg font-semibold text-typography-900 dark:text-typography-50">
+						{title}
 					</Text>
-				) : null}
-			</View>
-			{items ? (
-				<View className="mt-5">
-					{items.map((item, index) => (
-						<TouchableOpacity
-							key={item.key}
-							onPress={item.onPress}
-							className="relative flex-row items-center justify-between py-3"
-						>
-							<View className="flex-row items-center gap-4">
-								<View
-									className={`rounded-2xl p-3 ${
-										item.iconWrapperClassName ?? "bg-secondary-100 dark:bg-primary-800"
-									}`}
-								>
-									{item.icon}
-								</View>
-								<View className="max-w-[230px] flex-col gap-1">
-									<Text
-										className={`text-base font-semibold ${
-											item.variant === "danger"
-												? "text-error-600"
-												: "text-typography-900 dark:text-typography-50"
+					{description ? (
+						<Text className="text-sm text-typography-600 dark:text-typography-300">
+							{description}
+						</Text>
+					) : null}
+				</View>
+				{items ? (
+					<View className="mt-5">
+						{items.map((item, index) => (
+							<TouchableOpacity
+								key={item.key}
+								onPress={item.onPress}
+								className="relative flex-row items-center justify-between py-3"
+							>
+								<View className="flex-row items-center gap-4">
+									<View
+										className={`rounded-2xl p-3 ${
+											item.iconWrapperClassName ?? "bg-secondary-100 dark:bg-primary-800"
 										}`}
 									>
-										{item.title}
-									</Text>
-									{item.subtitle ? (
-										<Text className="text-sm text-typography-500 dark:text-typography-300">
-											{item.subtitle}
+										{item.icon}
+									</View>
+									<View className="max-w-[230px] flex-col gap-1">
+										<Text
+											className={`text-base font-semibold ${
+												item.variant === "danger"
+													? "text-error-600"
+													: "text-typography-900 dark:text-typography-50"
+											}`}
+										>
+											{item.title}
 										</Text>
-									) : null}
+										{item.subtitle ? (
+											<Text className="text-sm text-typography-500 dark:text-typography-300">
+												{item.subtitle}
+											</Text>
+										) : null}
+									</View>
 								</View>
-							</View>
-							<CaretRight size={20} color="#9CA3AF" weight="bold" />
-							{index < items.length - 1 ? (
-								<View className="absolute bottom-0 left-14 right-0 h-px bg-outline-100 dark:bg-outline-800" />
-							) : null}
-						</TouchableOpacity>
-					))}
-				</View>
-			) : null}
-			{children ? <View className="mt-5 gap-5">{children}</View> : null}
-		</Box>
-	);
+								<CaretRight size={20} color="#9CA3AF" weight="bold" />
+								{index < items.length - 1 ? (
+									<View className="absolute bottom-0 left-14 right-0 h-px bg-outline-100/70 dark:bg-outline-800" />
+								) : null}
+							</TouchableOpacity>
+						))}
+					</View>
+				) : null}
+				{children ? <View className="mt-5 gap-5">{children}</View> : null}
+			</Box>
+		);
+	};
 
 	return (
-		<SafeAreaView className="flex-1 bg-background-0 px-6 dark:bg-background-dark">
+		// TODO: pas fan du padding bottom hack
+		<SafeAreaView className="flex-1 bg-[#FDF8F4] px-6 pb-[-24px] dark:bg-background-950">
 			<ScrollView showsVerticalScrollIndicator={false}>
 				<Text className="mb-6 text-3xl font-bold text-typography-900 dark:text-typography-50">
 					<Trans id="settings-screen.title">Profil & paramètres</Trans>
 				</Text>
 
-				<Box className="relative mb-8 overflow-hidden rounded-3xl border border-accentGold-200 bg-accentGold-50/80 px-6 py-8 dark:border-accentGold-800 dark:bg-accentGold-900/30">
-					<View className="pointer-events-none absolute -right-10 -top-12 h-32 w-32 rounded-full bg-accentRose-200/60 dark:bg-accentRose-800/40" />
-					<View className="pointer-events-none absolute -bottom-14 left-8 h-28 w-28 rounded-full bg-accentGold-200/50 dark:bg-accentGold-800/40" />
+				<Box className="relative mb-8 overflow-hidden rounded-3xl border border-accentGold-200 bg-white/95 px-6 py-8 dark:border-accentGold-800 dark:bg-zinc-900/85">
+					<LinearGradient
+						pointerEvents="none"
+						start={{ x: 0, y: 0 }}
+						end={{ x: 1, y: 1 }}
+						colors={toneGradientMap.gold}
+						style={styles.gradientOverlay}
+					/>
 					<View className="relative z-10">
 						<View className="flex-row items-start justify-between">
 							<View className="flex-row items-center gap-4">
@@ -372,18 +395,18 @@ export default function SettingsScreen() {
 									</Text>
 								</View>
 							</View>
-							<TouchableOpacity
-								onPress={() => router.push("/(onboarding)/photos" as never)}
-								className="rounded-full border border-accentRose-400 bg-accentRose-100/80 px-4 py-2 dark:border-accentRose-700 dark:bg-accentRose-900/30"
-							>
-								<View className="flex-row items-center gap-2">
-									<PencilSimpleLine size={18} color="#7A2742" weight="bold" />
-									<Text className="text-sm font-medium text-accentRose-700 dark:text-accentRose-200">
-										<Trans id="settings-screen.update-photo">Modifier</Trans>
-									</Text>
-								</View>
-							</TouchableOpacity>
 						</View>
+						<TouchableOpacity
+							onPress={() => router.push("/(onboarding)/photos" as never)}
+							className="rounded-full border border-accentRose-400 bg-accentRose-100/80 px-4 py-2 dark:border-accentRose-700 dark:bg-accentRose-900/30 mt-4 flex flex-row items-center justify-center"
+						>
+							<View className="flex-row items-center gap-2">
+								<PencilSimpleLine size={18} color="#7A2742" weight="bold" />
+								<Text className="text-sm font-medium text-accentRose-700 dark:text-accentRose-200">
+									<Trans id="settings-screen.update-photo">Modifier</Trans>
+								</Text>
+							</View>
+						</TouchableOpacity>
 
 						<View className="mt-6 flex-row flex-wrap gap-3">
 							{profile?.age ? (
@@ -419,30 +442,41 @@ export default function SettingsScreen() {
 							{stats.map((item) => (
 								<View
 									key={item.key}
-									className={`flex-1 items-center rounded-2xl border px-4 py-3 ${
+									className={`relative flex-1 overflow-hidden rounded-2xl border ${
 										item.tone === "rose"
-											? "border-accentRose-200 bg-accentRose-50/80 dark:border-accentRose-800/60 dark:bg-accentRose-900/30"
-											: "border-accentGold-200 bg-accentGold-50/80 dark:border-accentGold-800/60 dark:bg-accentGold-900/30"
-									}`}
+											? "border-accentRose-200 dark:border-accentRose-700"
+											: "border-accentGold-200 dark:border-accentGold-700"
+									} bg-white/85 dark:bg-white/5`}
 								>
-									<Text
-										className={`text-xl font-semibold ${
-											item.tone === "rose"
-												? "text-accentRose-700 dark:text-accentRose-200"
-												: "text-accentGold-700 dark:text-accentGold-200"
-										}`}
-									>
-										{item.value}
-									</Text>
-									<Text
-										className={`text-xs uppercase tracking-wide ${
-											item.tone === "rose"
-												? "text-accentRose-600 dark:text-accentRose-300"
-												: "text-accentGold-600 dark:text-accentGold-300"
-										}`}
-									>
-										{item.label}
-									</Text>
+									<LinearGradient
+										pointerEvents="none"
+										start={{ x: 0, y: 0 }}
+										end={{ x: 1, y: 1 }}
+										colors={
+											item.tone === "rose" ? toneGradientMap.rose : toneGradientMap.gold
+										}
+										style={styles.gradientOverlay}
+									/>
+									<View className="relative items-center px-4 py-3">
+										<Text
+											className={`text-xl font-semibold ${
+												item.tone === "rose"
+													? "text-accentRose-700 dark:text-accentRose-200"
+													: "text-accentGold-700 dark:text-accentGold-200"
+											}`}
+										>
+											{item.value}
+										</Text>
+										<Text
+											className={`text-xs uppercase tracking-wide ${
+												item.tone === "rose"
+													? "text-accentRose-600 dark:text-accentRose-300"
+													: "text-accentGold-600 dark:text-accentGold-300"
+											}`}
+										>
+											{item.label}
+										</Text>
+									</View>
 								</View>
 							))}
 						</View>
@@ -474,45 +508,63 @@ export default function SettingsScreen() {
 					}
 				>
 					<View className="flex-col gap-3">
-						<View className="flex-row items-center gap-3">
-							<View className="rounded-2xl border border-accentGold-200/60 bg-accentGold-100/80 p-3 dark:border-accentGold-800/60 dark:bg-accentGold-900/30">
-								<Globe size={20} color="#9A6A00" weight="bold" />
-							</View>
-							<View className="flex-1">
-								<Text className="text-base font-semibold text-typography-900 dark:text-typography-50">
-									<Trans id="settings-screen.language">Langue</Trans>
-								</Text>
-								<View className="mt-2 flex-row flex-wrap gap-2">
-									{localeOptions.map((option) => (
-										<OptionPill
-											key={option.value}
-											label={option.label}
-											isActive={locale === option.value}
-											onPress={() => handleLocaleChange(option.value)}
-											tone="gold"
-										/>
-									))}
+						<View className="relative overflow-hidden rounded-3xl border border-accentGold-200/70 bg-white/95 px-4 py-4 dark:border-accentGold-700 dark:bg-zinc-900/70">
+							<LinearGradient
+								pointerEvents="none"
+								start={{ x: 0, y: 0 }}
+								end={{ x: 1, y: 1 }}
+								colors={toneGradientMap.gold}
+								style={styles.gradientOverlay}
+							/>
+							<View className="relative flex-row items-center gap-3">
+								<View className="rounded-2xl border border-white/60 bg-white/40 p-3 dark:border-white/10 dark:bg-white/5">
+									<Globe size={20} color="#9A6A00" weight="bold" />
+								</View>
+								<View className="flex-1">
+									<Text className="text-base font-semibold text-typography-900 dark:text-typography-50">
+										<Trans id="settings-screen.language">Langue</Trans>
+									</Text>
+									<View className="mt-2 flex-row flex-wrap gap-2">
+										{localeOptions.map((option) => (
+											<OptionPill
+												key={option.value}
+												label={option.label}
+												isActive={locale === option.value}
+												onPress={() => handleLocaleChange(option.value)}
+												tone="gold"
+											/>
+										))}
+									</View>
 								</View>
 							</View>
 						</View>
-						<View className="flex-row items-center gap-3">
-							<View className="rounded-2xl border border-accentRose-200/60 bg-accentRose-100/80 p-3 dark:border-accentRose-800/60 dark:bg-accentRose-900/30">
-								<Palette size={20} color="#7A2742" weight="bold" />
-							</View>
-							<View className="flex-1">
-								<Text className="text-base font-semibold text-typography-900 dark:text-typography-50">
-									<Trans id="settings-screen.theme">Thème</Trans>
-								</Text>
-								<View className="mt-2 flex-row flex-wrap gap-2">
-									{themeOptions.map((option) => (
-										<OptionPill
-											key={option.value}
-											label={option.label}
-											isActive={mode === option.value}
-											onPress={() => handleThemeChange(option.value)}
-											tone="rose"
-										/>
-									))}
+						<View className="relative overflow-hidden rounded-3xl border border-accentRose-200/70 bg-white/95 px-4 py-4 dark:border-accentRose-700 dark:bg-zinc-900/70">
+							<LinearGradient
+								pointerEvents="none"
+								start={{ x: 0, y: 0 }}
+								end={{ x: 1, y: 1 }}
+								colors={toneGradientMap.rose}
+								style={styles.gradientOverlay}
+							/>
+							<View className="relative flex-row items-center gap-3">
+								<View className="rounded-2xl border border-white/60 bg-white/40 p-3 dark:border-white/10 dark:bg-white/5">
+									<Palette size={20} color="#7A2742" weight="bold" />
+								</View>
+								<View className="flex-1">
+									<Text className="text-base font-semibold text-typography-900 dark:text-typography-50">
+										<Trans id="settings-screen.theme">Thème</Trans>
+									</Text>
+									<View className="mt-2 flex-row flex-wrap gap-2">
+										{themeOptions.map((option) => (
+											<OptionPill
+												key={option.value}
+												label={option.label}
+												isActive={mode === option.value}
+												onPress={() => handleThemeChange(option.value)}
+												tone="rose"
+											/>
+										))}
+									</View>
 								</View>
 							</View>
 						</View>
@@ -560,3 +612,9 @@ export default function SettingsScreen() {
 		</SafeAreaView>
 	);
 }
+
+const styles = StyleSheet.create({
+	gradientOverlay: {
+		...StyleSheet.absoluteFillObject,
+	},
+});

@@ -9,6 +9,7 @@ import {
 } from "@/components/onboarding";
 import { useOnboardingAnalytics } from "@/src/hooks/use-onboarding-analytics";
 import { useOnboardingDraft } from "@/src/hooks/use-onboarding-draft";
+import { Image } from "expo-image";
 
 export default function IntroValuesScreen() {
 	const router = useRouter();
@@ -29,15 +30,17 @@ export default function IntroValuesScreen() {
 
 	return (
 		<OnboardingShell
+			icon={
+				<Image
+					source={require("../../assets/images/icon.png")}
+					style={{ width: 120, height: 120, borderRadius: 24 }}
+					contentFit="contain"
+					accessibilityLabel="WeTwo logo"
+				/>
+			}
 			title={
 				<Trans id="onboarding.intro.title">
 					Une seule conversation par jour, tout en douceur.
-				</Trans>
-			}
-			subtitle={
-				<Trans id="onboarding.intro.subtitle">
-					On vous accompagne pas à pas pour construire un profil authentique et
-					apaisant.
 				</Trans>
 			}
 			footer={
@@ -66,6 +69,12 @@ export default function IntroValuesScreen() {
 			}
 		>
 			<View className="flex flex-col" style={{ gap: 16 }}>
+				<Text className="text-center text-base font-body text-typography-500 dark:text-zinc-400">
+					<Trans id="onboarding.intro.subtitle">
+						On vous accompagne pas à pas pour construire un profil authentique et
+						apaisant.
+					</Trans>
+				</Text>
 				<Text className="text-center text-base font-body text-typography-500 dark:text-zinc-400">
 					<Trans id="onboarding.intro.value1">
 						WeTwo ralentit les choses pour que chaque échange compte.

@@ -37,7 +37,6 @@ import {
 	Pressable,
 	StyleSheet,
 	Text,
-	TouchableOpacity,
 	View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -100,8 +99,7 @@ export default function HomeScreen() {
 		mutateAsync: createConversationFromMatch,
 		isPending: isStartingConversation,
 	} = useCreateConversationFromMatch();
-	const matchButtonIsLoading =
-		isDailyMatchLoading || isDailyMatchRefetching || isSearching;
+	const matchButtonIsLoading = isDailyMatchLoading || isDailyMatchRefetching;
 
 	const resolvedTheme: ThemeVariant =
 		(mode === "system" ? colorScheme ?? "light" : mode) === "dark"
@@ -129,9 +127,23 @@ export default function HomeScreen() {
 		return "home-screen.greeting.evening";
 	}, []);
 
+	const handleCancelSearch = useCallback(async () => {
+		setIsCancellingSearch(true);
+		try {
+			await cancelSearch();
+		} catch (error) {
+			Alert.alert("WeTwo", extractErrorMessage(error));
+		} finally {
+			setIsCancellingSearch(false);
+		}
+	}, [cancelSearch]);
+
 	const handleMatchPress = useCallback(async () => {
 		await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 		if (isSearching) {
+			if (!isCancellingSearch) {
+				await handleCancelSearch();
+			}
 			return;
 		}
 		try {
@@ -143,18 +155,14 @@ export default function HomeScreen() {
 		} catch (error) {
 			Alert.alert("WeTwo", extractErrorMessage(error));
 		}
-	}, [dailyMatch, isSearching, refetchDailyMatch, startSearch]);
-
-	const handleCancelSearch = useCallback(async () => {
-		setIsCancellingSearch(true);
-		try {
-			await cancelSearch();
-		} catch (error) {
-			Alert.alert("WeTwo", extractErrorMessage(error));
-		} finally {
-			setIsCancellingSearch(false);
-		}
-	}, [cancelSearch]);
+	}, [
+		dailyMatch,
+		handleCancelSearch,
+		isCancellingSearch,
+		isSearching,
+		refetchDailyMatch,
+		startSearch,
+	]);
 
 	const handleAcceptMatch = useCallback(async () => {
 		if (!dailyMatch) return;
@@ -232,14 +240,6 @@ export default function HomeScreen() {
 				<View className="flex-1 justify-between gap-5 px-6 pb-8 pt-6">
 					<HeroCard streak={streak} greetingKey={greeting} name={firstName} />
 					<View className="flex flex-col gap-4">
-						{isSearching ? (
-							<SearchStateCard
-								state={searchState}
-								onCancel={handleCancelSearch}
-								isCancelling={isCancellingSearch}
-								errorMessage={searchStreamError}
-							/>
-						) : null}
 						{dailyMatch ? (
 							<DailyMatchCard
 								match={dailyMatch}
@@ -260,6 +260,10 @@ export default function HomeScreen() {
 								theme={resolvedTheme}
 								borderColor={matchButtonBorderColor}
 								isLoading={matchButtonIsLoading}
+								isSearching={isSearching}
+								searchState={searchState}
+								isCancellingSearch={isCancellingSearch}
+								errorMessage={searchStreamError}
 							/>
 						)}
 
@@ -316,6 +320,10 @@ function MatchButton({
 	theme,
 	borderColor,
 	isLoading,
+	isSearching = false,
+	searchState,
+	isCancellingSearch = false,
+	errorMessage,
 }: {
 	onPress: () => void;
 	gradient: GradientColors;
@@ -323,14 +331,24 @@ function MatchButton({
 	theme: ThemeVariant;
 	borderColor: string;
 	isLoading?: boolean;
+	isSearching?: boolean;
+	searchState?: SearchStateEventPayload | null;
+	isCancellingSearch?: boolean;
+	errorMessage?: string | null;
 }) {
 	const isDark = theme === "dark";
 	const iconColor = isDark ? "#FFFFFF" : "#7A2742";
+	const queuedAt = isSearching ? searchState?.queuedAt ?? null : null;
+	const durationLabel = useQueueDurationLabel(queuedAt);
+	const statusLabel = getSearchStatusLabel(searchState?.status);
+	const isDisabled = Boolean(isLoading || isCancellingSearch);
+
+	console.log("searchState", searchState);
 
 	return (
 		<Pressable
 			onPress={onPress}
-			disabled={isLoading}
+			disabled={isDisabled}
 			accessibilityRole="button"
 			className="active:scale-95"
 		>
@@ -343,7 +361,50 @@ function MatchButton({
 					end={{ x: 1, y: 1 }}
 					style={[styles.matchButton, shadowStyle, { borderColor }]}
 				>
-					{isLoading ? (
+					{isSearching ? (
+						<View className="w-full">
+							<View className="flex-row items-start gap-3">
+								<ActivityIndicator color={iconColor} />
+								<View className="flex-1">
+									<Text className="text-lg font-semibold text-typography-900 dark:text-typography-white">
+										{statusLabel}
+									</Text>
+									{durationLabel ? (
+										<Text className="mt-1 text-sm text-typography-700 dark:text-typography-200">
+											<Trans id="home-screen.search.wait-time">
+												En file depuis {durationLabel}
+											</Trans>
+										</Text>
+									) : null}
+								</View>
+							</View>
+							{searchState?.isOnline === false ? (
+								<Text className="mt-3 text-xs text-error-500">
+									<Trans id="home-screen.search.offline">
+										On ne reçoit plus ton signal, reste sur l’écran pour conserver ta
+										place.
+									</Trans>
+								</Text>
+							) : null}
+							{errorMessage ? (
+								<Text className="mt-2 text-xs text-error-500">{errorMessage}</Text>
+							) : null}
+							<View className="mt-5 flex-row items-center gap-2 rounded-full bg-white/60 px-3 py-1 dark:bg-black/20">
+								{isCancellingSearch ? (
+									<ActivityIndicator size="small" color={iconColor} />
+								) : (
+									<SparkleIcon size={14} weight="fill" color={iconColor} />
+								)}
+								<Text className="text-[11px] tracking-[1.4px] text-typography-700 dark:text-typography-white/80">
+									{isCancellingSearch ? (
+										<Trans id="home-screen.search.cancel.loading">Annulation…</Trans>
+									) : (
+										<Trans id="home-screen.search.cancel">Annuler la recherche</Trans>
+									)}
+								</Text>
+							</View>
+						</View>
+					) : isLoading ? (
 						<View className="flex-row items-center gap-2">
 							<ActivityIndicator color={iconColor} />
 							<Text className="text-2xl font-semibold text-typography-900 dark:text-typography-white">
@@ -358,85 +419,17 @@ function MatchButton({
 							</Text>
 						</View>
 					)}
-					<View className="mt-5 flex-row items-center gap-2 rounded-full bg-white/60 px-3 py-1 dark:bg-black/20">
-						<SparkleIcon size={14} weight="fill" color={iconColor} />
-						<Text className="text-[11px] tracking-[1.4px] text-typography-700 dark:text-typography-white/80">
-							<Trans id="home-screen.cta-tag">Connection du jour</Trans>
-						</Text>
-					</View>
+					{!isSearching ? (
+						<View className="mt-5 flex-row items-center gap-2 rounded-full bg-white/60 px-3 py-1 dark:bg-black/20">
+							<SparkleIcon size={14} weight="fill" color={iconColor} />
+							<Text className="text-[11px] tracking-[1.4px] text-typography-700 dark:text-typography-white/80">
+								<Trans id="home-screen.cta-tag">Connection du jour</Trans>
+							</Text>
+						</View>
+					) : null}
 				</LinearGradient>
 			</View>
 		</Pressable>
-	);
-}
-
-function SearchStateCard({
-	state,
-	onCancel,
-	isCancelling,
-	errorMessage,
-}: {
-	state: SearchStateEventPayload | null;
-	onCancel: () => void;
-	isCancelling: boolean;
-	errorMessage?: string | null;
-}) {
-	const durationLabel = useQueueDurationLabel(state?.queuedAt ?? null);
-	const statusLabel = getSearchStatusLabel(state?.status);
-
-	return (
-		<View className="overflow-hidden rounded-[28px] border border-outline-100 bg-white/95 p-5 dark:border-outline-800 dark:bg-black/30">
-			<View className="flex-row items-center gap-3">
-				<ActivityIndicator color="#E08AA4" />
-				<View className="flex-1">
-					<Text className="text-lg font-semibold text-typography-900 dark:text-typography-white">
-						{statusLabel}
-					</Text>
-					{durationLabel ? (
-						<Text className="mt-1 text-sm text-typography-600 dark:text-typography-300">
-							<Trans
-								id="home-screen.search.wait-time"
-								values={{ duration: durationLabel }}
-							>
-								En file depuis {durationLabel}
-							</Trans>
-						</Text>
-					) : null}
-					{state?.isOnline === false ? (
-						<Text className="mt-1 text-xs text-error-500">
-							<Trans id="home-screen.search.offline">
-								On ne reçoit plus ton signal, reste sur l'écran pour conserver ta place.
-							</Trans>
-						</Text>
-					) : null}
-					{errorMessage ? (
-						<Text className="mt-2 text-xs text-error-500">{errorMessage}</Text>
-					) : null}
-				</View>
-			</View>
-			<TouchableOpacity
-				onPress={onCancel}
-				disabled={isCancelling}
-				className={`mt-5 flex-row items-center justify-center gap-2 rounded-full border px-4 py-2 ${
-					isCancelling
-						? "border-outline-200 bg-outline-50 dark:border-outline-700 dark:bg-outline-800/40"
-						: "border-outline-200 bg-white dark:border-outline-600 dark:bg-white/5"
-				}`}
-			>
-				{isCancelling ? (
-					<ActivityIndicator size="small" color="#7A2742" />
-				) : (
-					<SparkleIcon size={18} weight="fill" color="#E08AA4" />
-				)}
-				<Text className="text-sm font-semibold text-typography-900 dark:text-typography-white">
-					{isCancelling ? (
-						<Trans id="home-screen.search.cancel.loading">Annulation…</Trans>
-					) : (
-						<Trans id="home-screen.search.cancel">Annuler la recherche</Trans>
-					)}
-				</Text>
-			</TouchableOpacity>
-		</View>
 	);
 }
 
@@ -491,10 +484,7 @@ function getSearchStatusLabel(status?: AvailabilityStatus) {
 			);
 		default:
 			return (
-				<Trans
-					id="home-screen.search.status.generic"
-					values={{ status: status ?? "—" }}
-				>
+				<Trans id="home-screen.search.status.generic">
 					Statut : {status ?? "—"}
 				</Trans>
 			);
@@ -668,41 +658,6 @@ function DailyMatchCard({
 					/>
 				) : null}
 			</View>
-		</View>
-	);
-}
-
-function MatchingStateCard({
-	isSearching,
-	onRefresh,
-}: {
-	isSearching: boolean;
-	onRefresh: () => void;
-}) {
-	return (
-		<View className="rounded-3xl border border-dashed border-outline-100 bg-white/60 p-6 dark:border-white/10 dark:bg-white/5">
-			<Text className="text-base font-heading text-typography-900 dark:text-typography-white">
-				<Trans id="matching-state.title">Prêt·e quand toi tu l&apos;es</Trans>
-			</Text>
-			<Text className="mt-2 text-sm text-typography-600 dark:text-typography-200">
-				<Trans id="matching-state.subtitle">
-					Aucun match actif pour le moment. Lance ta connexion du jour quand tu seras
-					disponible.
-				</Trans>
-			</Text>
-			<Pressable
-				onPress={onRefresh}
-				disabled={isSearching}
-				className="mt-5 items-center rounded-2xl border border-outline-100/80 bg-white px-4 py-3 dark:border-white/10 dark:bg-white/10"
-			>
-				{isSearching ? (
-					<ActivityIndicator />
-				) : (
-					<Text className="font-semibold text-typography-900 dark:text-typography-white">
-						<Trans id="matching-state.refresh">Mettre à jour</Trans>
-					</Text>
-				)}
-			</Pressable>
 		</View>
 	);
 }

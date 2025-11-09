@@ -13,6 +13,7 @@ type OnboardingShellProps = PropsWithChildren<{
 	headerAccessory?: ReactNode;
 	footer?: ReactNode;
 	contentSpacing?: "loose" | "normal" | "tight";
+	icon?: ReactNode;
 }>;
 
 const contentGap = {
@@ -28,6 +29,7 @@ export function OnboardingShell({
 	children,
 	footer,
 	contentSpacing = "normal",
+	icon,
 }: OnboardingShellProps) {
 	return (
 		<KeyboardAvoidingView
@@ -46,6 +48,9 @@ export function OnboardingShell({
 						<View className="flex flex-col" style={{ gap: 24 }}>
 							<View className="flex-row items-center justify-between">
 								<View className="flex-1 flex-col" style={{ gap: 12 }}>
+									{icon ? (
+										<View className="flex items-center justify-center">{icon}</View>
+									) : null}
 									<Text className="text-3xl font-heading text-typography-900 dark:text-zinc-100">
 										{title}
 									</Text>

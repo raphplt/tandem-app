@@ -77,9 +77,6 @@ export function ChatSocketProvider({ children }: { children: ReactNode }) {
 				socketRef.current.disconnect();
 				socketRef.current = null;
 			}
-			console.error(
-				"[ChatSocketProvider] No token available, cannot connect socket"
-			);
 			setIsConnected(false);
 			return;
 		}
