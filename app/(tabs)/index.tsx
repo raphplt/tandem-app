@@ -362,10 +362,10 @@ function MatchButton({
 					style={[styles.matchButton, shadowStyle, { borderColor }]}
 				>
 					{isSearching ? (
-						<View className="w-full">
-							<View className="flex-row items-start gap-3">
+						<View className="w-fit">
+							<View className="flex-row items-center justify-center gap-2">
 								<ActivityIndicator color={iconColor} />
-								<View className="flex-1">
+								<View className="items-center">
 									<Text className="text-lg font-semibold text-typography-900 dark:text-typography-white">
 										{statusLabel}
 									</Text>
@@ -389,7 +389,7 @@ function MatchButton({
 							{errorMessage ? (
 								<Text className="mt-2 text-xs text-error-500">{errorMessage}</Text>
 							) : null}
-							<View className="mt-5 flex-row items-center gap-2 rounded-full bg-white/60 px-3 py-1 dark:bg-black/20">
+							<View className="mt-4 w-fit flex justify-center flex-row items-center gap-2 rounded-full bg-white/40 px-3 py-2 dark:bg-black/20">
 								{isCancellingSearch ? (
 									<ActivityIndicator size="small" color={iconColor} />
 								) : (
@@ -485,7 +485,7 @@ function getSearchStatusLabel(status?: AvailabilityStatus) {
 		default:
 			return (
 				<Trans id="home-screen.search.status.generic">
-					Statut : {status ?? "—"}
+					{status ?? "Recherche en cours..."}
 				</Trans>
 			);
 	}
