@@ -429,8 +429,7 @@ export default function SettingsScreen() {
 	};
 
 	return (
-		// TODO: pas fan du padding bottom hack
-		<SafeAreaView className="flex-1 bg-[#FDF8F4] px-6 pb-[-24px] dark:bg-background-950">
+		<SafeAreaView className="flex-1 bg-[#FDF8F4] px-6 dark:bg-background-950 pb-24">
 			<ScrollView showsVerticalScrollIndicator={false}>
 				<Text className="mb-6 text-3xl font-bold text-typography-900 dark:text-typography-50">
 					<Trans id="settings-screen.title">Profil & paramètres</Trans>

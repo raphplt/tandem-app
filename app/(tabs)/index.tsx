@@ -227,7 +227,7 @@ export default function HomeScreen() {
 	}
 
 	return (
-		<View className="flex-1 bg-background-0 dark:bg-background-950">
+		<View className="flex-1 bg-background-0 dark:bg-background-950 pb-24">
 			<LinearGradient
 				colors={heroGradient}
 				start={{ x: 0, y: 0 }}
