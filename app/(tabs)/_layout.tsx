@@ -1,4 +1,5 @@
 import { HapticTab } from "@/components/haptic-tab";
+import { CustomTabBar } from "@/components/ui/custom-tab-bar";
 import { Colors } from "@/constants/theme";
 import { useAuthSession } from "@/hooks/use-auth-session";
 import { useColorScheme } from "@/hooks/use-color-scheme";
@@ -39,6 +40,7 @@ export default function TabLayout() {
 
 	return (
 		<Tabs
+			tabBar={(props) => <CustomTabBar {...props} />}
 			screenOptions={{
 				tabBarActiveTintColor: Colors[actualThemeMode ?? "light"].tint,
 				headerShown: false,
