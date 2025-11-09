@@ -1,6 +1,10 @@
 import { useAuthSession } from "@/hooks/use-auth-session";
 import { env } from "@/src/config/env";
-import type { MessageResponse, CreateMessageDto, UpdateMessageDto } from "@/types/message";
+import type {
+	CreateMessageDto,
+	MessageResponse,
+	UpdateMessageDto,
+} from "@/types/message";
 import {
 	createContext,
 	useCallback,
@@ -73,13 +77,22 @@ export function ChatSocketProvider({ children }: { children: ReactNode }) {
 				socketRef.current.disconnect();
 				socketRef.current = null;
 			}
+			console.error(
+				"[ChatSocketProvider] No token available, cannot connect socket"
+			);
 			setIsConnected(false);
 			return;
 		}
 
 		const socket = io(`${env.baseURL}/chat`, {
-			transports: ["websocket"],
+			transports: ["websocket", "polling"],
 			autoConnect: false,
+			auth: {
+				token: token,
+			},
+			query: {
+				token: token,
+			},
 			extraHeaders: {
 				Authorization: `Bearer ${token}`,
 			},
@@ -87,8 +100,13 @@ export function ChatSocketProvider({ children }: { children: ReactNode }) {
 
 		socketRef.current = socket;
 
-		const handleConnect = () => setIsConnected(true);
-		const handleDisconnect = () => setIsConnected(false);
+		const handleConnect = () => {
+			setIsConnected(true);
+		};
+
+		const handleDisconnect = () => {
+			setIsConnected(false);
+		};
 
 		socket.on("connect", handleConnect);
 		socket.on("disconnect", handleDisconnect);
@@ -110,20 +128,17 @@ export function ChatSocketProvider({ children }: { children: ReactNode }) {
 		socketRef.current?.emit("conversation.leave", { conversationId });
 	}, []);
 
-	const sendMessage = useCallback(
-		async (payload: CreateMessageDto) => {
-			if (!socketRef.current) {
-				throw new Error("Socket not connected");
-			}
-			const ack = (await emitWithAck<MessageAck>(
-				socketRef.current,
-				"message.send",
-				payload
-			)) as Extract<MessageAck, { status: "ok" }>;
-			return ack.message;
-		},
-		[]
-	);
+	const sendMessage = useCallback(async (payload: CreateMessageDto) => {
+		if (!socketRef.current) {
+			throw new Error("Socket not connected");
+		}
+		const ack = (await emitWithAck<MessageAck>(
+			socketRef.current,
+			"message.send",
+			payload
+		)) as Extract<MessageAck, { status: "ok" }>;
+		return ack.message;
+	}, []);
 
 	const updateMessage = useCallback(
 		async (messageId: string, update: UpdateMessageDto) => {
@@ -156,11 +171,9 @@ export function ChatSocketProvider({ children }: { children: ReactNode }) {
 		if (!socketRef.current) {
 			throw new Error("Socket not connected");
 		}
-		await emitWithAck<SimpleAck>(
-			socketRef.current,
-			"message.read",
-			{ conversationId }
-		);
+		await emitWithAck<SimpleAck>(socketRef.current, "message.read", {
+			conversationId,
+		});
 	}, []);
 
 	const value = useMemo<ChatSocketContextValue>(

@@ -67,12 +67,11 @@ export default function ConversationScreen() {
 
 	const partnerName = useMemo(() => {
 		if (!conversation) return "Ton match";
-		const { metadata } = conversation;
 		const isUser1 = conversation.user1Id === session?.user?.id;
-		return (
-			(isUser1 ? metadata?.user2DisplayName : metadata?.user1DisplayName) ??
-			"Ton match"
-		);
+		const name = isUser1
+			? conversation.profile2?.firstName
+			: conversation.profile1?.firstName;
+		return name ?? "Ton match";
 	}, [conversation, session?.user?.id]);
 
 	const expiresIn = formatTimeUntilExpiry(conversation?.timeUntilExpiry);
@@ -92,7 +91,6 @@ export default function ConversationScreen() {
 			setIsSending(false);
 		}
 	}, [inputValue, markRead, sendMessage]);
-
 	const disabledInput =
 		!conversation?.isActiveConversation || conversation.status !== "active";
 
@@ -146,8 +144,7 @@ export default function ConversationScreen() {
 					<View className="mx-4 mb-2 rounded-2xl border border-outline-200 bg-white/80 px-4 py-2 dark:border-white/10 dark:bg-white/10">
 						<Text className="text-xs text-typography-600 dark:text-typography-300">
 							<Trans id="chat.closed">
-								Conversation terminée. Tu peux revoir l&apos;historique mais pas
-								écrire.
+								Conversation terminée. Tu peux revoir l&apos;historique mais pas écrire.
 							</Trans>
 						</Text>
 					</View>

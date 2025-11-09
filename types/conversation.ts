@@ -1,3 +1,5 @@
+import { Profile } from "./user";
+
 export enum ConversationStatus {
 	ACTIVE = "active",
 	EXPIRED = "expired",
@@ -15,18 +17,16 @@ export interface ConversationMetadata {
 	timezoneOffset?: number;
 	extensionCount?: number;
 	lastActivity?: string;
-	user1LastSeen?: string;
-	user2LastSeen?: string;
-	user1DisplayName?: string;
-	user2DisplayName?: string;
-	user1AvatarUrl?: string;
-	user2AvatarUrl?: string;
+	profile1: Profile;
+	profile2: Profile;
 }
 
 export interface ConversationResponse {
 	id: string;
 	user1Id: string;
 	user2Id: string;
+	profile1: Profile;
+	profile2: Profile;
 	matchId: string;
 	status: ConversationStatus;
 	type: ConversationType;
@@ -50,4 +50,3 @@ export interface ConversationResponse {
 	canBeExtended: boolean;
 	hasUnreadMessages: boolean;
 }
-

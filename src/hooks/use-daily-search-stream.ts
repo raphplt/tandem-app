@@ -1,6 +1,6 @@
 import { useAuthSession } from "@/hooks/use-auth-session";
-import { MATCHES_QUERY_KEY } from "@/src/hooks/use-matches";
 import { env } from "@/src/config/env";
+import { MATCHES_QUERY_KEY } from "@/src/hooks/use-matches";
 import { apiFetch } from "@/src/lib/api/client";
 import { extractErrorMessage } from "@/src/utils/error";
 import type { HeartbeatEventPayload, SearchStateEventPayload } from "@/types/availability";

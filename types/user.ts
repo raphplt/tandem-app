@@ -21,6 +21,7 @@ export interface Profile {
 	age?: number;
 	gender?: Gender;
 	interestedIn?: Gender[];
+	firstName?: string;
 	photoUrl?: string; //TODO : tableau d'images ?
 	photoPublicId?: string;
 	visibility?: ProfileVisibility;

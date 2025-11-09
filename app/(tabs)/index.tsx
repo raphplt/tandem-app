@@ -2,6 +2,7 @@ import { useAuthSession } from "@/hooks/use-auth-session";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useThemeStore } from "@/hooks/use-theme-store";
 import { useCreateConversationFromMatch } from "@/src/hooks/use-conversations";
+import { useDailySearchStream } from "@/src/hooks/use-daily-search-stream";
 import {
 	useAcceptMatch,
 	useDailyMatch,
@@ -9,6 +10,10 @@ import {
 } from "@/src/hooks/use-matches";
 import { useMyProfile } from "@/src/hooks/use-profiles";
 import { extractErrorMessage } from "@/src/utils/error";
+import type {
+	AvailabilityStatus,
+	SearchStateEventPayload,
+} from "@/types/availability";
 import type { MatchProfileSnapshot, MatchResponse } from "@/types/match";
 import { getDateWelcomeMessage } from "@/utils/time";
 import { Trans } from "@lingui/react/macro";
@@ -36,8 +41,6 @@ import {
 	View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import type { SearchStateEventPayload, AvailabilityStatus } from "@/types/availability";
-import { useDailySearchStream } from "@/src/hooks/use-daily-search-stream";
 
 type GradientColors = [ColorValue, ColorValue, ...ColorValue[]];
 
@@ -249,15 +252,17 @@ export default function HomeScreen() {
 								isStartingConversation={isStartingConversation}
 								waitingForPartner={waitingForPartner}
 							/>
-						) : null}
-						<MatchButton
-							onPress={handleMatchPress}
-							gradient={primaryGlow}
-							shadowStyle={matchShadow}
-							theme={resolvedTheme}
-							borderColor={matchButtonBorderColor}
-							isLoading={matchButtonIsLoading}
-						/>
+						) : (
+							<MatchButton
+								onPress={handleMatchPress}
+								gradient={primaryGlow}
+								shadowStyle={matchShadow}
+								theme={resolvedTheme}
+								borderColor={matchButtonBorderColor}
+								isLoading={matchButtonIsLoading}
+							/>
+						)}
+
 						<Text className="mt-8 text-center text-sm text-typography-600 dark:text-typography-300">
 							<Trans id="home-screen.cta-hint">
 								Une seule conversation par jour. Fais-en un moment sincère.
@@ -342,9 +347,7 @@ function MatchButton({
 						<View className="flex-row items-center gap-2">
 							<ActivityIndicator color={iconColor} />
 							<Text className="text-2xl font-semibold text-typography-900 dark:text-typography-white">
-								<Trans id="home-screen.cta.loading">
-									Recherche en cours
-								</Trans>
+								<Trans id="home-screen.cta.loading">Recherche en cours</Trans>
 							</Text>
 						</View>
 					) : (
@@ -402,8 +405,7 @@ function SearchStateCard({
 					{state?.isOnline === false ? (
 						<Text className="mt-1 text-xs text-error-500">
 							<Trans id="home-screen.search.offline">
-								On ne reçoit plus ton signal, reste sur l'écran pour conserver ta
-								place.
+								On ne reçoit plus ton signal, reste sur l'écran pour conserver ta place.
 							</Trans>
 						</Text>
 					) : null}

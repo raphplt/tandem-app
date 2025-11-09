@@ -121,11 +121,10 @@ function ConversationCard({
 	onPress: () => void;
 }) {
 	const partnerDisplayName = useMemo(() => {
-		const { metadata } = conversation;
 		const isUser1 = conversation.user1Id === currentUserId;
 		const name = isUser1
-			? metadata?.user2DisplayName
-			: metadata?.user1DisplayName;
+			? conversation.profile2?.firstName
+			: conversation.profile1?.firstName;
 		return name ?? "Ton match";
 	}, [conversation, currentUserId]);
 
@@ -144,11 +143,7 @@ function ConversationCard({
 			<View className="flex-row items-center justify-between">
 				<View className="flex-row items-center gap-3">
 					<View className="rounded-2xl bg-accentRose-100/70 p-3 dark:bg-accentRose-900/20">
-						<ChatsTeardrop
-							size={24}
-							weight="fill"
-							color="#7A2742"
-						/>
+						<ChatsTeardrop size={24} weight="fill" color="#7A2742" />
 					</View>
 					<View>
 						<Text className="text-lg font-heading text-typography-900 dark:text-typography-white">
@@ -183,20 +178,19 @@ function ConversationCard({
 						icon={<Clock size={14} color="#7A2742" weight="bold" />}
 						label={
 							<Text className="text-xs font-semibold uppercase tracking-[1px] text-typography-700 dark:text-typography-200">
-								<Trans id="conversation.expires">
-									Expire dans {expiresIn}
-								</Trans>
+								<Trans id="conversation.expires">Expire dans {expiresIn}</Trans>
 							</Text>
 						}
 					/>
 				) : null}
-				{conversation.hasUnreadMessages ? (
+				{/* {conversation.hasUnreadMessages ? (
 					<View className="rounded-full bg-accentRose-200/80 px-3 py-1">
 						<Text className="text-xs font-semibold uppercase tracking-[1px] text-accentRose-800">
 							<Trans id="conversation.unread">Nouveaux</Trans>
 						</Text>
 					</View>
 				) : null}
+				 */}
 			</View>
 		</Pressable>
 	);

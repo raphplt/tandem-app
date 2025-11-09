@@ -1,20 +1,19 @@
-import { useEffect, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useEffect, useMemo } from "react";
 
+import { useMessages } from "@/src/hooks/use-messages";
+import { useChatSocket } from "@/src/providers/chat-socket-provider";
 import type {
 	CreateMessageDto,
 	MessageResponse,
 	UpdateMessageDto,
 } from "@/types/message";
-import { useMessages } from "@/src/hooks/use-messages";
-import { useChatSocket } from "@/src/providers/chat-socket-provider";
 
 function upsertMessage(list: MessageResponse[], incoming: MessageResponse) {
 	const index = list.findIndex((msg) => msg.id === incoming.id);
 	if (index === -1) {
 		return [...list, incoming].sort(
-			(a, b) =>
-				new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+			(a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
 		);
 	}
 	const updated = [...list];
@@ -77,9 +76,16 @@ export function useChatMessages(conversationId?: string, limit = 50) {
 			socket.off("message.deleted", handleDeletedMessage);
 			leaveConversation(conversationId);
 		};
-	}, [conversationId, joinConversation, leaveConversation, queryClient, queryKey, socket]);
+	}, [
+		conversationId,
+		joinConversation,
+		leaveConversation,
+		queryClient,
+		queryKey,
+		socket,
+	]);
 
-	const sendMessage = (
+	const sendMessage = async (
 		payload: Omit<CreateMessageDto, "conversationId"> & { content: string }
 	) => {
 		if (!conversationId) {
