@@ -34,6 +34,7 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import "react-native-reanimated";
 import "react-native-svg";
+import { PostHogProvider } from "posthog-react-native";
 
 // TODO : utile ?
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -89,25 +90,36 @@ export default function RootLayout() {
 	const actualThemeMode = getActualThemeMode();
 
 	return (
-		<GluestackUIProvider mode={actualThemeMode}>
-			<ThemeProvider value={actualThemeMode === "dark" ? DarkTheme : DefaultTheme}>
-				<I18nProvider i18n={i18n}>
-					<QueryProvider>
-						<AuthProvider>
-							<ChatSocketProvider>
-								<Stack screenOptions={{ headerShown: false }}>
-									<Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-									<Stack.Screen
-										name="(onboarding)"
-										options={{ headerShown: false }}
-									/>
-								</Stack>
-							</ChatSocketProvider>
-						</AuthProvider>
-					</QueryProvider>
-				</I18nProvider>
-				<StatusBar style="auto" />
-			</ThemeProvider>
-		</GluestackUIProvider>
+		<PostHogProvider
+			apiKey="phc_acE9fPowwZkVHVqkTy2ynA7zf9hHIg2G23ru2yLRaof"
+			options={{
+				host: 'https://eu.i.posthog.com',
+				enableSessionReplay: true,
+			}}
+			autocapture
+		>
+			<GluestackUIProvider mode={actualThemeMode}>
+				<ThemeProvider value={
+					actualThemeMode === "dark" ? DarkTheme : DefaultTheme
+				}>
+					<I18nProvider i18n={i18n}>
+						<QueryProvider>
+							<AuthProvider>
+								<ChatSocketProvider>
+									<Stack screenOptions={{ headerShown: false }}>
+										<Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+										<Stack.Screen
+											name="(onboarding)"
+											options={{ headerShown: false }}
+										/>
+									</Stack>
+								</ChatSocketProvider>
+							</AuthProvider>
+						</QueryProvider>
+					</I18nProvider>
+					<StatusBar style="auto" />
+				</ThemeProvider>
+			</GluestackUIProvider>
+		</PostHogProvider>
 	);
 }
