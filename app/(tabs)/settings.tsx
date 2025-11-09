@@ -21,6 +21,7 @@ import {
 	Text,
 	TouchableOpacity,
 	View,
+	useColorScheme,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -34,22 +35,42 @@ import { getImageUrl } from "@/utils/image";
 
 type AccentTone = "gold" | "rose" | "primary";
 
-const toneGradientMap: Record<AccentTone, [string, string, string]> = {
+// Light mode gradients
+const toneGradientMapLight: Record<AccentTone, [string, string, string]> = {
 	gold: [
-		"rgba(255, 245, 231, 0.95)",
-		"rgba(255, 236, 210, 0.65)",
-		"rgba(255, 255, 255, 0.08)",
+		"rgba(248, 233, 184, 0.4)",
+		"rgba(240, 214, 141, 0.25)",
+		"rgba(255, 255, 255, 0.05)",
 	],
 	rose: [
-		"rgba(255, 240, 246, 0.95)",
-		"rgba(255, 230, 238, 0.65)",
-		"rgba(255, 255, 255, 0.08)",
+		"rgba(253, 229, 237, 0.4)",
+		"rgba(243, 179, 200, 0.25)",
+		"rgba(255, 255, 255, 0.05)",
 	],
 	primary: [
-		"rgba(244, 241, 255, 0.95)",
-		"rgba(229, 238, 255, 0.6)",
-		"rgba(255, 255, 255, 0.08)",
+		"rgba(229, 238, 255, 0.3)",
+		"rgba(207, 226, 255, 0.15)",
+		"rgba(255, 255, 255, 0.05)",
 	],
+};
+
+// Dark mode gradients
+const toneGradientMapDark: Record<AccentTone, [string, string, string]> = {
+	gold: ["rgba(58, 42, 0, 0.3)", "rgba(89, 62, 0, 0.15)", "rgba(0, 0, 0, 0.1)"],
+	rose: [
+		"rgba(43, 14, 24, 0.3)",
+		"rgba(81, 23, 43, 0.15)",
+		"rgba(0, 0, 0, 0.1)",
+	],
+	primary: [
+		"rgba(29, 25, 47, 0.3)",
+		"rgba(51, 39, 77, 0.15)",
+		"rgba(0, 0, 0, 0.1)",
+	],
+};
+
+const getToneGradient = (tone: AccentTone, isDark: boolean) => {
+	return isDark ? toneGradientMapDark[tone] : toneGradientMapLight[tone];
 };
 
 export default function SettingsScreen() {
@@ -58,8 +79,13 @@ export default function SettingsScreen() {
 	const { data: session } = useAuthSession();
 	const { signOut } = useAuthActions();
 	const router = useRouter();
+	const colorScheme = useColorScheme();
 	const [isSigningOut, setIsSigningOut] = useState(false);
 	const [isDeletingProfile, setIsDeletingProfile] = useState(false);
+
+	// Determine if dark mode is active
+	const isDark =
+		mode === "dark" || (mode === "system" && colorScheme === "dark");
 
 	const handleThemeChange = (newMode: ThemeMode) => {
 		setMode(newMode);
@@ -343,7 +369,7 @@ export default function SettingsScreen() {
 					pointerEvents="none"
 					start={{ x: 0, y: 0 }}
 					end={{ x: 1, y: 1 }}
-					colors={toneGradientMap[tone]}
+					colors={getToneGradient(tone, isDark)}
 					style={styles.gradientOverlay}
 				/>
 				<View className="relative flex flex-col gap-2">
@@ -415,7 +441,7 @@ export default function SettingsScreen() {
 						pointerEvents="none"
 						start={{ x: 0, y: 0 }}
 						end={{ x: 1, y: 1 }}
-						colors={toneGradientMap.gold}
+						colors={getToneGradient("gold", isDark)}
 						style={styles.gradientOverlay}
 					/>
 					<View className="relative z-10">
@@ -501,7 +527,9 @@ export default function SettingsScreen() {
 										start={{ x: 0, y: 0 }}
 										end={{ x: 1, y: 1 }}
 										colors={
-											item.tone === "rose" ? toneGradientMap.rose : toneGradientMap.gold
+											item.tone === "rose"
+												? getToneGradient("rose", isDark)
+												: getToneGradient("gold", isDark)
 										}
 										style={styles.gradientOverlay}
 									/>
@@ -561,7 +589,7 @@ export default function SettingsScreen() {
 								pointerEvents="none"
 								start={{ x: 0, y: 0 }}
 								end={{ x: 1, y: 1 }}
-								colors={toneGradientMap.primary}
+								colors={getToneGradient("primary", isDark)}
 								style={styles.gradientOverlay}
 							/>
 							<View className="relative flex-row items-center gap-3">
@@ -591,7 +619,7 @@ export default function SettingsScreen() {
 								pointerEvents="none"
 								start={{ x: 0, y: 0 }}
 								end={{ x: 1, y: 1 }}
-								colors={toneGradientMap.primary}
+								colors={getToneGradient("primary", isDark)}
 								style={styles.gradientOverlay}
 							/>
 							<View className="relative flex-row items-center gap-3">
