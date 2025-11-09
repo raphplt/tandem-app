@@ -343,8 +343,6 @@ function MatchButton({
 	const statusLabel = getSearchStatusLabel(searchState?.status);
 	const isDisabled = Boolean(isLoading || isCancellingSearch);
 
-	console.log("searchState", searchState);
-
 	return (
 		<Pressable
 			onPress={onPress}

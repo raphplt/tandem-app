@@ -11,9 +11,17 @@ import {
 	Question,
 	ShieldCheck,
 	SignOut as SignOutIcon,
+	TrashIcon,
 } from "phosphor-react-native";
 import { useMemo, useState, type ReactNode } from "react";
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+	Alert,
+	ScrollView,
+	StyleSheet,
+	Text,
+	TouchableOpacity,
+	View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Box } from "@/components/ui/box";
@@ -27,9 +35,21 @@ import { getImageUrl } from "@/utils/image";
 type AccentTone = "gold" | "rose" | "primary";
 
 const toneGradientMap: Record<AccentTone, [string, string, string]> = {
-	gold: ["rgba(255, 245, 231, 0.95)", "rgba(255, 236, 210, 0.65)", "rgba(255, 255, 255, 0.08)"],
-	rose: ["rgba(255, 240, 246, 0.95)", "rgba(255, 230, 238, 0.65)", "rgba(255, 255, 255, 0.08)"],
-	primary: ["rgba(244, 241, 255, 0.95)", "rgba(229, 238, 255, 0.6)", "rgba(255, 255, 255, 0.08)"],
+	gold: [
+		"rgba(255, 245, 231, 0.95)",
+		"rgba(255, 236, 210, 0.65)",
+		"rgba(255, 255, 255, 0.08)",
+	],
+	rose: [
+		"rgba(255, 240, 246, 0.95)",
+		"rgba(255, 230, 238, 0.65)",
+		"rgba(255, 255, 255, 0.08)",
+	],
+	primary: [
+		"rgba(244, 241, 255, 0.95)",
+		"rgba(229, 238, 255, 0.6)",
+		"rgba(255, 255, 255, 0.08)",
+	],
 };
 
 export default function SettingsScreen() {
@@ -39,6 +59,7 @@ export default function SettingsScreen() {
 	const { signOut } = useAuthActions();
 	const router = useRouter();
 	const [isSigningOut, setIsSigningOut] = useState(false);
+	const [isDeletingProfile, setIsDeletingProfile] = useState(false);
 
 	const handleThemeChange = (newMode: ThemeMode) => {
 		setMode(newMode);
@@ -82,6 +103,34 @@ export default function SettingsScreen() {
 			console.error("Failed to sign out", error);
 		} finally {
 			setIsSigningOut(false);
+		}
+	};
+
+	const handleDeleteProfile = async () => {
+		setIsDeletingProfile(true);
+		try {
+			Alert.alert(
+				"Delete Profile",
+				"Are you sure you want to delete your profile? This action cannot be undone.",
+				[
+					{ text: "Cancel", style: "cancel" },
+					{
+						text: "Delete",
+						style: "destructive",
+						onPress: () => {
+							Alert.alert(
+								"Not implemented",
+								"Profile deletion is not implemented yet."
+							);
+							// Implement profile deletion logic here
+						},
+					},
+				]
+			);
+		} catch (error) {
+			console.error("Failed to delete profile", error);
+		} finally {
+			setIsDeletingProfile(false);
 		}
 	};
 
@@ -181,15 +230,15 @@ export default function SettingsScreen() {
 		() => [
 			{
 				key: "faq",
-				title: <Trans id="settings-screen.help-center">Centre d’aide</Trans>,
+				title: <Trans id="settings-screen.help-center">Centre d&apos;aide</Trans>,
 				subtitle: (
 					<Trans id="settings-screen.help-center.description">
 						Consulte les réponses aux questions fréquentes.
 					</Trans>
 				),
-				icon: <Question size={22} color="#7A2742" weight="bold" />,
+				icon: <Question size={22} color="#737373" weight="bold" />,
 				iconWrapperClassName:
-					"bg-accentRose-100/90 border border-accentRose-200/70 dark:bg-accentRose-900/30 dark:border-accentRose-800/60",
+					"bg-secondary-100/30 border border-outline-200/70 dark:bg-secondary-900/30 dark:border-outline-700/60",
 				onPress: () => router.push("/(tabs)" as never),
 			},
 			{
@@ -197,18 +246,17 @@ export default function SettingsScreen() {
 				title: <Trans id="settings-screen.contact">Contacter le support</Trans>,
 				subtitle: (
 					<Trans id="settings-screen.contact.description">
-						Besoin d’aide ? Écris-nous directement.
+						Besoin d&apos;aide ? Écris-nous directement.
 					</Trans>
 				),
-				icon: <Globe size={22} color="#7A2742" weight="bold" />,
+				icon: <Globe size={22} color="#737373" weight="bold" />,
 				iconWrapperClassName:
-					"bg-accentRose-100/90 border border-accentRose-200/70 dark:bg-accentRose-900/30 dark:border-accentRose-800/60",
+					"bg-secondary-100/30 border border-outline-200/70 dark:bg-secondary-900/30 dark:border-outline-700/60",
 				onPress: () => router.push("/(tabs)" as never),
 			},
 		],
 		[router]
 	);
-
 	const OptionPill = ({
 		label,
 		isActive,
@@ -232,7 +280,7 @@ export default function SettingsScreen() {
 					case "rose":
 						return "border-accentRose-500 bg-accentRose-100/90 dark:border-accentRose-400 dark:bg-accentRose-900/30";
 					default:
-						return "border-primary-500 bg-primary-50/80 dark:border-primary-400 dark:bg-primary-900/40";
+						return "border-primary-300 bg-primary-50/30 dark:border-primary-400 dark:bg-primary-900/40";
 				}
 			})()}`}
 		>
@@ -398,11 +446,11 @@ export default function SettingsScreen() {
 						</View>
 						<TouchableOpacity
 							onPress={() => router.push("/(onboarding)/photos" as never)}
-							className="rounded-full border border-accentRose-400 bg-accentRose-100/80 px-4 py-2 dark:border-accentRose-700 dark:bg-accentRose-900/30 mt-4 flex flex-row items-center justify-center"
+							className="rounded-full border border-accentGold-400 bg-accentGold-100/80 px-4 py-2 dark:border-accentGold-700 dark:bg-accentGold-900/30 mt-4 flex flex-row items-center justify-center"
 						>
 							<View className="flex-row items-center gap-2">
-								<PencilSimpleLine size={18} color="#7A2742" weight="bold" />
-								<Text className="text-sm font-medium text-accentRose-700 dark:text-accentRose-200">
+								<PencilSimpleLine size={18} color="#7A5400" weight="bold" />
+								<Text className="text-sm font-medium text-accentGold-700-700 dark:text-accentGold-200">
 									<Trans id="settings-screen.update-photo">Modifier</Trans>
 								</Text>
 							</View>
@@ -495,7 +543,7 @@ export default function SettingsScreen() {
 				/>
 
 				<MenuGroup
-					tone="rose"
+					tone="primary"
 					title={
 						<Trans id="settings-screen.section.personalization">
 							Personnalisation
@@ -508,17 +556,17 @@ export default function SettingsScreen() {
 					}
 				>
 					<View className="flex-col gap-3">
-						<View className="relative overflow-hidden rounded-3xl border border-accentGold-200/70 bg-white/95 px-4 py-4 dark:border-accentGold-700 dark:bg-zinc-900/70">
+						<View className="relative overflow-hidden rounded-3xl border border-outline-200/70 bg-white/95 px-4 py-4 dark:border-outline-700 dark:bg-zinc-900/70">
 							<LinearGradient
 								pointerEvents="none"
 								start={{ x: 0, y: 0 }}
 								end={{ x: 1, y: 1 }}
-								colors={toneGradientMap.gold}
+								colors={toneGradientMap.primary}
 								style={styles.gradientOverlay}
 							/>
 							<View className="relative flex-row items-center gap-3">
 								<View className="rounded-2xl border border-white/60 bg-white/40 p-3 dark:border-white/10 dark:bg-white/5">
-									<Globe size={20} color="#9A6A00" weight="bold" />
+									<Globe size={20} color="#737373" weight="bold" />
 								</View>
 								<View className="flex-1">
 									<Text className="text-base font-semibold text-typography-900 dark:text-typography-50">
@@ -531,24 +579,24 @@ export default function SettingsScreen() {
 												label={option.label}
 												isActive={locale === option.value}
 												onPress={() => handleLocaleChange(option.value)}
-												tone="gold"
+												tone="primary"
 											/>
 										))}
 									</View>
 								</View>
 							</View>
 						</View>
-						<View className="relative overflow-hidden rounded-3xl border border-accentRose-200/70 bg-white/95 px-4 py-4 dark:border-accentRose-700 dark:bg-zinc-900/70">
+						<View className="relative overflow-hidden rounded-3xl border border-outline-200/70 bg-white/95 px-4 py-4 dark:border-outline-700 dark:bg-zinc-900/70">
 							<LinearGradient
 								pointerEvents="none"
 								start={{ x: 0, y: 0 }}
 								end={{ x: 1, y: 1 }}
-								colors={toneGradientMap.rose}
+								colors={toneGradientMap.primary}
 								style={styles.gradientOverlay}
 							/>
 							<View className="relative flex-row items-center gap-3">
 								<View className="rounded-2xl border border-white/60 bg-white/40 p-3 dark:border-white/10 dark:bg-white/5">
-									<Palette size={20} color="#7A2742" weight="bold" />
+									<Palette size={20} color="#737373" weight="bold" />
 								</View>
 								<View className="flex-1">
 									<Text className="text-base font-semibold text-typography-900 dark:text-typography-50">
@@ -561,7 +609,7 @@ export default function SettingsScreen() {
 												label={option.label}
 												isActive={mode === option.value}
 												onPress={() => handleThemeChange(option.value)}
-												tone="rose"
+												tone="primary"
 											/>
 										))}
 									</View>
@@ -572,7 +620,7 @@ export default function SettingsScreen() {
 				</MenuGroup>
 
 				<MenuGroup
-					tone="rose"
+					tone="primary"
 					title={<Trans id="settings-screen.section.support">Aide & support</Trans>}
 					description={
 						<Trans id="settings-screen.section.support.description">
@@ -583,10 +631,13 @@ export default function SettingsScreen() {
 				/>
 
 				<MenuGroup
-					title={<Trans id="settings-screen.section.danger">Déconnexion</Trans>}
+					tone="rose"
+					title={
+						<Trans id="settings-screen.section.danger">Actions dangereuses</Trans>
+					}
 					description={
 						<Trans id="settings-screen.section.danger.description">
-							Se déconnecter de ton compte WeTwo sur cet appareil.
+							Se déconnecter de ton compte WeTwo ou supprimer ton profil.
 						</Trans>
 					}
 					items={[
@@ -604,6 +655,24 @@ export default function SettingsScreen() {
 							),
 							icon: <SignOutIcon size={22} color="#DC2626" weight="bold" />,
 							onPress: handleSignOut,
+							variant: "danger",
+						},
+						{
+							key: "delete-profile",
+							title: isDeletingProfile ? (
+								<Trans id="settings-screen.deleting-profile">
+									Suppression en cours…
+								</Trans>
+							) : (
+								<Trans id="settings-screen.delete-profile">Supprimer mon profil</Trans>
+							),
+							subtitle: (
+								<Trans id="settings-screen.delete-profile.description">
+									Cette action est irréversible.
+								</Trans>
+							),
+							icon: <TrashIcon size={22} color="#DC2626" weight="bold" />,
+							onPress: handleDeleteProfile,
 							variant: "danger",
 						},
 					]}
