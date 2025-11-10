@@ -34,14 +34,18 @@ export function useDailySearchStream() {
 	const sessionToken = session?.sessionToken;
 	const queryClient = useQueryClient();
 
-	const [searchState, setSearchState] = useState<SearchStateEventPayload | null>(null);
+	const [searchState, setSearchState] = useState<SearchStateEventPayload | null>(
+		null
+	);
 	const [isSearching, setIsSearching] = useState(false);
 	const [streamError, setStreamError] = useState<string | null>(null);
 	const [lastHeartbeatAt, setLastHeartbeatAt] = useState<string | null>(null);
 
 	const controllerRef = useRef<AbortController | null>(null);
 	const streamCleanupRef = useRef<(() => void) | null>(null);
-	const heartbeatIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+	const heartbeatIntervalRef = useRef<ReturnType<typeof setInterval> | null>(
+		null
+	);
 	const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const shouldStayConnectedRef = useRef(false);
 	const isStartingRef = useRef(false);
@@ -164,6 +168,7 @@ export function useDailySearchStream() {
 			if (!payload?.match) {
 				return;
 			}
+			console.debug("[match-search] match_found event received", payload.match.id);
 			await stopSearch({ callLeave: false, silent: true });
 			setSearchState((prev) => ({
 				...(prev ?? { status: "matched" }),
@@ -244,6 +249,7 @@ export function useDailySearchStream() {
 				signal: controller.signal,
 				onEvent: handleStreamEvent,
 				onError: (error) => {
+					console.warn("[match-search] SSE stream error", error);
 					if (controller.signal.aborted) {
 						return;
 					}
@@ -255,6 +261,7 @@ export function useDailySearchStream() {
 					}
 				},
 				onClose: () => {
+					console.debug("[match-search] SSE stream closed");
 					streamCleanupRef.current = null;
 					controllerRef.current = null;
 					if (shouldStayConnectedRef.current) {
@@ -264,6 +271,7 @@ export function useDailySearchStream() {
 			});
 
 			streamCleanupRef.current = cleanup;
+			console.debug("[match-search] SSE stream connected");
 			setStreamError(null);
 		} catch (error) {
 			controllerRef.current = null;
@@ -355,6 +363,8 @@ function openEventStream(options: EventStreamOptions) {
 	}
 
 	const xhr = new XMLHttpRequest();
+	const READY_STATE_LOADING = XMLHttpRequest.LOADING ?? 3;
+	const READY_STATE_DONE = XMLHttpRequest.DONE ?? 4;
 	let buffer = "";
 	let lastIndex = 0;
 	let aborted = false;
@@ -368,7 +378,10 @@ function openEventStream(options: EventStreamOptions) {
 	options.signal.addEventListener("abort", abortHandler);
 
 	xhr.onreadystatechange = () => {
-		if (xhr.readyState === xhr.LOADING || xhr.readyState === xhr.DONE) {
+		if (
+			xhr.readyState === READY_STATE_LOADING ||
+			xhr.readyState === READY_STATE_DONE
+		) {
 			const chunk = xhr.responseText.substring(lastIndex);
 			lastIndex = xhr.responseText.length;
 			if (chunk) {
@@ -386,7 +399,7 @@ function openEventStream(options: EventStreamOptions) {
 			}
 		}
 
-		if (xhr.readyState === xhr.DONE) {
+		if (xhr.readyState === READY_STATE_DONE) {
 			if (buffer.trim().length > 0) {
 				const parsed = parseSseEvent(buffer);
 				buffer = "";

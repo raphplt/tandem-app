@@ -1,11 +1,19 @@
-import { PropsWithChildren, ReactNode } from "react";
 import {
+	PropsWithChildren,
+	ReactNode,
+	useEffect,
+	useRef,
+	useState,
+} from "react";
+import {
+	Keyboard,
 	KeyboardAvoidingView,
 	Platform,
 	ScrollView,
 	Text,
 	View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type OnboardingShellProps = PropsWithChildren<{
 	title: ReactNode;
@@ -31,19 +39,66 @@ export function OnboardingShell({
 	contentSpacing = "normal",
 	icon,
 }: OnboardingShellProps) {
+	const scrollViewRef = useRef<ScrollView>(null);
+	const [keyboardHeight, setKeyboardHeight] = useState(0);
+	const insets = useSafeAreaInsets();
+
+	useEffect(() => {
+		const keyboardWillShowListener = Keyboard.addListener(
+			Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow",
+			(e) => {
+				setKeyboardHeight(e.endCoordinates.height);
+			}
+		);
+
+		const keyboardDidHideListener = Keyboard.addListener(
+			Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide",
+			() => {
+				setKeyboardHeight(0);
+				// Reset scroll position when keyboard closes
+				setTimeout(
+					() => {
+						scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+					},
+					Platform.OS === "android" ? 100 : 0
+				);
+			}
+		);
+
+		return () => {
+			keyboardWillShowListener.remove();
+			keyboardDidHideListener.remove();
+		};
+	}, []);
+
 	return (
 		<KeyboardAvoidingView
 			className="flex-1 bg-white dark:bg-black"
 			behavior={Platform.OS === "ios" ? "padding" : undefined}
 		>
-			<ScrollView
+			<View
 				className="flex-1"
-				contentContainerStyle={{
-					flexGrow: 1,
+				style={{
+					paddingBottom:
+						Platform.OS === "android" && keyboardHeight > 0
+							? keyboardHeight + 10
+							: Platform.OS === "ios"
+							? 0
+							: insets.bottom,
 				}}
-				keyboardShouldPersistTaps="handled"
 			>
-				<View className="flex-1 justify-between px-6 py-20">
+				<ScrollView
+					ref={scrollViewRef}
+					className="flex-1"
+					contentContainerStyle={{
+						paddingHorizontal: 24,
+						paddingTop: 80,
+						paddingBottom: footer ? 24 : 80,
+					}}
+					keyboardShouldPersistTaps="handled"
+					keyboardDismissMode="on-drag"
+					showsVerticalScrollIndicator={false}
+				>
 					<View className="flex flex-col" style={{ gap: 32 }}>
 						<View className="flex flex-col" style={{ gap: 24 }}>
 							<View className="flex-row items-center justify-between">
@@ -73,10 +128,22 @@ export function OnboardingShell({
 							{children}
 						</View>
 					</View>
+				</ScrollView>
 
-					{footer ? <View className="mt-12">{footer}</View> : null}
-				</View>
-			</ScrollView>
+				{footer ? (
+					<View
+						className="bg-white px-6 py-4 dark:bg-black"
+						style={{
+							paddingBottom:
+								Platform.OS === "android" && keyboardHeight > 0
+									? 24
+									: Math.max(insets.bottom, 16),
+						}}
+					>
+						{footer}
+					</View>
+				) : null}
+			</View>
 		</KeyboardAvoidingView>
 	);
 }

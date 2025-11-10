@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
 import { Trans } from "@lingui/react/macro";
 import { useRouter } from "expo-router";
+import { useMemo, useState } from "react";
 import { Text, TextInput, View } from "react-native";
 
 import {
@@ -10,8 +10,8 @@ import {
 } from "@/components/onboarding";
 import { useOnboardingDraft } from "@/src/hooks/use-onboarding-draft";
 import { useOnboardingStep } from "@/src/hooks/use-onboarding-step";
-import { extractErrorMessage } from "@/src/utils/error";
 import { onboardingFirstNameSchema } from "@/src/lib/validations/onboarding";
+import { extractErrorMessage } from "@/src/utils/error";
 
 export default function FirstNameScreen() {
 	const router = useRouter();
@@ -73,8 +73,8 @@ export default function FirstNameScreen() {
 			title={<Trans id="onboarding.firstName.title">Quel est ton prénom ?</Trans>}
 			subtitle={
 				<Trans id="onboarding.firstName.subtitle">
-					Dis-nous comment nous devrions t&apos;appeler et partage ton intention si tu
-					le souhaites.
+					Dis-nous comment nous devrions t&apos;appeler et partage ton intention si
+					tu le souhaites.
 				</Trans>
 			}
 			headerAccessory={<StepIndicator current={1} total={9} />}

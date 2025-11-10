@@ -1,7 +1,7 @@
 import { Trans } from "@lingui/react/macro";
 import { format, parseISO } from "date-fns";
 import { useRouter } from "expo-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Text, TextInput } from "react-native";
 
 import {
@@ -22,16 +22,24 @@ export default function BirthdateScreen() {
 	const saveDraft = useOnboardingDraft((state) => state.saveDraft);
 	const { trackContinue } = useOnboardingStep("birthdate");
 
-	const [birthdateInput, setBirthdateInput] = useState(() => {
+	const initialBirthdate = useMemo(() => {
 		if (!profile.birthdate) return "";
 		try {
 			return format(parseISO(profile.birthdate), "dd/MM/yyyy");
 		} catch {
 			return "";
 		}
-	});
+	}, [profile.birthdate]);
+
+	const [birthdateInput, setBirthdateInput] = useState(initialBirthdate);
+	const previousValueRef = useRef(initialBirthdate);
 	const [error, setError] = useState<string | null>(null);
 	const [loading, setLoading] = useState(false);
+
+	useEffect(() => {
+		previousValueRef.current = initialBirthdate;
+		setBirthdateInput(initialBirthdate);
+	}, [initialBirthdate]);
 
 	const isContinueDisabled = useMemo(
 		() => birthdateInput.trim().length < 8 || loading,
@@ -93,7 +101,11 @@ export default function BirthdateScreen() {
 			</Text>
 			<TextInput
 				value={birthdateInput}
-				onChangeText={(value) => setBirthdateInput(formatBirthdateInput(value))}
+				onChangeText={(value) => {
+					const formatted = formatBirthdateInput(value, previousValueRef.current);
+					previousValueRef.current = formatted;
+					setBirthdateInput(formatted);
+				}}
 				placeholder="JJ/MM/AAAA"
 				keyboardType="number-pad"
 				maxLength={10}
