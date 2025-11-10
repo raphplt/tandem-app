@@ -35,6 +35,26 @@ import { useEffect } from "react";
 import "react-native-reanimated";
 import "react-native-svg";
 import { PostHogProvider } from "posthog-react-native";
+import * as Sentry from '@sentry/react-native';
+
+Sentry.init({
+  dsn: 'https://eda9d819f003da054a54824f29dfd6d3@o4510342966804480.ingest.de.sentry.io/4510342969098320',
+
+  // Adds more context data to events (IP address, cookies, user, etc.)
+  // For more information, visit: https://docs.sentry.io/platforms/react-native/data-management/data-collected/
+  sendDefaultPii: true,
+
+  // Enable Logs
+  enableLogs: true,
+
+  // Configure Session Replay
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1,
+  integrations: [Sentry.mobileReplayIntegration(), Sentry.feedbackIntegration()],
+
+  // uncomment the line below to enable Spotlight (https://spotlightjs.com)
+  // spotlight: __DEV__,
+});
 
 // TODO : utile ?
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -43,7 +63,7 @@ export const unstable_settings = {
 	anchor: "(tabs)",
 };
 
-export default function RootLayout() {
+export default Sentry.wrap(function RootLayout() {
 	const colorScheme = useColorScheme();
 	const { mode } = useThemeStore();
 	const [fontsLoaded, fontsError] = useFonts({
@@ -122,4 +142,4 @@ export default function RootLayout() {
 			</GluestackUIProvider>
 		</PostHogProvider>
 	);
-}
+});

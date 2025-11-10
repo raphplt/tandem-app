@@ -7,13 +7,13 @@ import type { HeartbeatEventPayload, SearchStateEventPayload } from "@/types/ava
 import type { MatchResponse } from "@/types/match";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
+import EventSource, { type EventSourceListener } from "react-native-sse";
 
 const SEARCH_STREAM_ENDPOINT = "/api/v1/matches/search/stream";
 const JOIN_QUEUE_ENDPOINT = "/api/v1/availability/queue/join";
 const LEAVE_QUEUE_ENDPOINT = "/api/v1/availability/queue/leave";
 const HEARTBEAT_ENDPOINT = "/api/v1/availability/heartbeat";
 const HEARTBEAT_INTERVAL_MS = 120_000;
-const RECONNECT_DELAY_MS = 4_000;
 
 type SSEMessage = {
 	event: string;
@@ -46,11 +46,8 @@ export function useDailySearchStream() {
 	const heartbeatIntervalRef = useRef<ReturnType<typeof setInterval> | null>(
 		null
 	);
-	const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-	const shouldStayConnectedRef = useRef(false);
 	const isStartingRef = useRef(false);
 	const isSearchingRef = useRef(false);
-	const connectStreamRef = useRef<(() => void) | null>(null);
 
 	const updateIsSearching = useCallback((value: boolean) => {
 		isSearchingRef.current = value;
@@ -63,13 +60,6 @@ export function useDailySearchStream() {
 			heartbeatIntervalRef.current = null;
 		}
 		setLastHeartbeatAt(null);
-	}, []);
-
-	const clearReconnectTimeout = useCallback(() => {
-		if (reconnectTimeoutRef.current) {
-			clearTimeout(reconnectTimeoutRef.current);
-			reconnectTimeoutRef.current = null;
-		}
 	}, []);
 
 	const callAvailabilityEndpoint = useCallback(
@@ -130,12 +120,10 @@ export function useDailySearchStream() {
 			controllerRef.current.abort();
 			controllerRef.current = null;
 		}
-		clearReconnectTimeout();
-	}, [clearReconnectTimeout]);
+	}, []);
 
 	const stopSearch = useCallback(
 		async ({ callLeave = true, silent = false }: StopSearchOptions = {}) => {
-			shouldStayConnectedRef.current = false;
 			stopStream();
 			clearHeartbeat();
 			updateIsSearching(false);
@@ -168,7 +156,6 @@ export function useDailySearchStream() {
 			if (!payload?.match) {
 				return;
 			}
-			console.debug("[match-search] match_found event received", payload.match.id);
 			await stopSearch({ callLeave: false, silent: true });
 			setSearchState((prev) => ({
 				...(prev ?? { status: "matched" }),
@@ -216,18 +203,8 @@ export function useDailySearchStream() {
 		[handleMatchFound, updateIsSearching]
 	);
 
-	const queueReconnect = useCallback(() => {
-		if (reconnectTimeoutRef.current || !shouldStayConnectedRef.current) {
-			return;
-		}
-		reconnectTimeoutRef.current = setTimeout(() => {
-			reconnectTimeoutRef.current = null;
-			connectStreamRef.current?.();
-		}, RECONNECT_DELAY_MS);
-	}, []);
-
 	const connectStream = useCallback(() => {
-		if (!shouldStayConnectedRef.current || controllerRef.current) {
+		if (controllerRef.current) {
 			return;
 		}
 		if (!sessionToken) {
@@ -244,7 +221,6 @@ export function useDailySearchStream() {
 				url: `${env.baseURL}${SEARCH_STREAM_ENDPOINT}`,
 				headers: {
 					Authorization: `Bearer ${sessionToken}`,
-					Accept: "text/event-stream",
 				},
 				signal: controller.signal,
 				onEvent: handleStreamEvent,
@@ -256,34 +232,24 @@ export function useDailySearchStream() {
 					streamCleanupRef.current = null;
 					controllerRef.current = null;
 					setStreamError(extractErrorMessage(error));
-					if (shouldStayConnectedRef.current) {
-						queueReconnect();
-					}
 				},
 				onClose: () => {
-					console.debug("[match-search] SSE stream closed");
 					streamCleanupRef.current = null;
 					controllerRef.current = null;
-					if (shouldStayConnectedRef.current) {
-						queueReconnect();
-					}
+				},
+				onOpen: () => {
+					console.debug("[match-search] SSE stream connected");
 				},
 			});
 
 			streamCleanupRef.current = cleanup;
-			console.debug("[match-search] SSE stream connected");
 			setStreamError(null);
 		} catch (error) {
 			controllerRef.current = null;
 			streamCleanupRef.current = null;
 			setStreamError(extractErrorMessage(error));
-			queueReconnect();
 		}
-	}, [handleStreamEvent, queueReconnect, sessionToken, updateIsSearching]);
-
-	useEffect(() => {
-		connectStreamRef.current = connectStream;
-	}, [connectStream]);
+	}, [handleStreamEvent, sessionToken, updateIsSearching]);
 
 	const startSearch = useCallback(async () => {
 		if (isStartingRef.current || isSearchingRef.current) {
@@ -298,7 +264,6 @@ export function useDailySearchStream() {
 		setStreamError(null);
 
 		try {
-			shouldStayConnectedRef.current = true;
 			updateIsSearching(true);
 			const joined = await joinQueue();
 			if (!joined) {
@@ -308,7 +273,6 @@ export function useDailySearchStream() {
 			startHeartbeatLoop();
 			connectStream();
 		} catch (error) {
-			shouldStayConnectedRef.current = false;
 			updateIsSearching(false);
 			stopStream();
 			clearHeartbeat();
@@ -358,118 +322,71 @@ type EventStreamOptions = {
 };
 
 function openEventStream(options: EventStreamOptions) {
-	if (typeof XMLHttpRequest === "undefined") {
-		throw new Error("SSE is not supported in this environment.");
-	}
+	const eventSource = new EventSource(options.url, {
+		headers: options.headers,
+		pollingInterval: 0,
+		timeoutBeforeConnection: 250,
+		withCredentials: false,
+	});
 
-	const xhr = new XMLHttpRequest();
-	const READY_STATE_LOADING = XMLHttpRequest.LOADING ?? 3;
-	const READY_STATE_DONE = XMLHttpRequest.DONE ?? 4;
-	let buffer = "";
-	let lastIndex = 0;
-	let aborted = false;
+	let isClosed = false;
+
+	const finalizeClose = () => {
+		if (isClosed) {
+			return;
+		}
+		isClosed = true;
+		options.onClose();
+	};
+
+	const forwardEvent: EventSourceListener<string> = (event) => {
+		if (!event?.type || typeof event.data === "undefined" || event.data === null) {
+			return;
+		}
+		options.onEvent({
+			event: event.type,
+			data:
+				typeof event.data === "string"
+					? event.data
+					: JSON.stringify(event.data),
+		});
+	};
+
+	const handleCloseEvent = () => {
+		options.signal.removeEventListener("abort", abortHandler);
+		eventSource.removeAllEventListeners();
+		finalizeClose();
+	};
 
 	const abortHandler = () => {
-		aborted = true;
-		xhr.abort();
-		options.signal.removeEventListener("abort", abortHandler);
+		handleCloseEvent();
+		eventSource.close();
 	};
 
 	options.signal.addEventListener("abort", abortHandler);
 
-	xhr.onreadystatechange = () => {
-		if (
-			xhr.readyState === READY_STATE_LOADING ||
-			xhr.readyState === READY_STATE_DONE
-		) {
-			const chunk = xhr.responseText.substring(lastIndex);
-			lastIndex = xhr.responseText.length;
-			if (chunk) {
-				buffer += chunk.replace(/\r\n/g, "\n");
-				let boundaryIndex = buffer.indexOf("\n\n");
-				while (boundaryIndex !== -1) {
-					const rawEvent = buffer.slice(0, boundaryIndex);
-					buffer = buffer.slice(boundaryIndex + 2);
-					const parsed = parseSseEvent(rawEvent);
-					if (parsed) {
-						options.onEvent(parsed);
-					}
-					boundaryIndex = buffer.indexOf("\n\n");
-				}
-			}
-		}
-
-		if (xhr.readyState === READY_STATE_DONE) {
-			if (buffer.trim().length > 0) {
-				const parsed = parseSseEvent(buffer);
-				buffer = "";
-				if (parsed) {
-					options.onEvent(parsed);
-				}
-			}
-			options.signal.removeEventListener("abort", abortHandler);
-			options.onClose();
-		}
-	};
-
-	xhr.onerror = () => {
-		options.signal.removeEventListener("abort", abortHandler);
-		if (!aborted) {
-			options.onError(new Error("SSE connection error"));
-		}
-	};
-
-	xhr.open("GET", options.url, true);
-	xhr.setRequestHeader("Accept", "text/event-stream");
-	Object.entries(options.headers ?? {}).forEach(([key, value]) => {
-		if (value) {
-			xhr.setRequestHeader(key, value);
-		}
+	eventSource.addEventListener("open", () => {
+		options.onOpen?.();
 	});
-	xhr.send();
+
+	eventSource.addEventListener("close", () => {
+		handleCloseEvent();
+	});
+
+	eventSource.addEventListener("error", (error) => {
+		if (options.signal.aborted) {
+			return;
+		}
+		options.onError(error instanceof Error ? error : new Error("SSE error"));
+	});
+
+	["message", "search_state", "match_found", "heartbeat"].forEach(
+		(eventName) => {
+			eventSource.addEventListener(eventName as any, forwardEvent);
+		}
+	);
 
 	return () => {
 		abortHandler();
-	};
-}
-
-function parseSseEvent(block: string): SSEMessage | null {
-	const trimmed = block.trim();
-	if (!trimmed) {
-		return null;
-	}
-
-	const lines = trimmed.split("\n");
-	let eventName = "message";
-	const dataLines: string[] = [];
-
-	for (const line of lines) {
-		if (!line || line.startsWith(":")) {
-			continue;
-		}
-		const colonIndex = line.indexOf(":");
-		if (colonIndex === -1) {
-			continue;
-		}
-		const field = line.slice(0, colonIndex).trim();
-		let value = line.slice(colonIndex + 1);
-		if (value.startsWith(" ")) {
-			value = value.slice(1);
-		}
-
-		if (field === "event" && value) {
-			eventName = value;
-		} else if (field === "data") {
-			dataLines.push(value);
-		}
-	}
-
-	if (dataLines.length === 0) {
-		return null;
-	}
-
-	return {
-		event: eventName,
-		data: dataLines.join("\n"),
 	};
 }
