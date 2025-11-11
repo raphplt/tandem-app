@@ -1,29 +1,31 @@
+import { ChatHeader } from "@/components/chat/chat-header";
+import { ChatInput } from "@/components/chat/chat-input";
+import { MessageBubble } from "@/components/chat/message-bubble";
 import { useAuthSession } from "@/hooks/use-auth-session";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useThemeStore } from "@/hooks/use-theme-store";
 import { useChatMessages } from "@/src/hooks/use-chat-messages";
 import { useConversation } from "@/src/hooks/use-conversations";
+import { formatTimeUntilExpiry } from "@/src/utils/date";
 import { extractErrorMessage } from "@/src/utils/error";
 import type { MessageResponse } from "@/types/message";
-import { t } from "@lingui/macro";
 import { Trans } from "@lingui/react/macro";
-import { format } from "date-fns";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import {
-	ArrowLeft,
-	PaperPlaneTilt,
-	Sparkle,
-} from "phosphor-react-native";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+	useCallback,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
 import {
 	ActivityIndicator,
 	Alert,
 	FlatList,
+	Keyboard,
 	KeyboardAvoidingView,
 	Platform,
-	Pressable,
 	Text,
-	TextInput,
 	View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -47,11 +49,18 @@ export default function ConversationScreen() {
 		isLoading: areMessagesLoading,
 		sendMessage,
 		markRead,
+		isPartnerTyping,
+		sendTypingStart,
+		sendTypingStop,
 	} = useChatMessages(conversationId, 100);
 
 	const [inputValue, setInputValue] = useState("");
 	const [isSending, setIsSending] = useState(false);
+	const [keyboardHeight, setKeyboardHeight] = useState(0);
 	const flatListRef = useRef<FlatList<MessageResponse>>(null);
+	const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+	const lastTypingSentRef = useRef<boolean>(false);
+	const isInitialLoadRef = useRef<boolean>(true);
 
 	const actualTheme =
 		mode === "system" ? (colorScheme === "dark" ? "dark" : "light") : mode;
@@ -61,8 +70,36 @@ export default function ConversationScreen() {
 	}, [conversationId, markRead]);
 
 	useEffect(() => {
+		const keyboardWillShowListener = Keyboard.addListener(
+			Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow",
+			(e) => {
+				setKeyboardHeight(e.endCoordinates.height);
+			}
+		);
+
+		const keyboardDidHideListener = Keyboard.addListener(
+			Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide",
+			() => {
+				setKeyboardHeight(0);
+			}
+		);
+
+		return () => {
+			keyboardWillShowListener.remove();
+			keyboardDidHideListener.remove();
+		};
+	}, []);
+
+	useEffect(() => {
+		isInitialLoadRef.current = true;
+	}, [conversationId]);
+
+	useEffect(() => {
 		if (messages.length === 0 || !flatListRef.current) return;
-		flatListRef.current.scrollToEnd({ animated: true });
+
+		if (!isInitialLoadRef.current) {
+			flatListRef.current.scrollToEnd({ animated: true });
+		}
 	}, [messages]);
 
 	const partnerName = useMemo(() => {
@@ -74,12 +111,38 @@ export default function ConversationScreen() {
 		return name ?? "Ton match";
 	}, [conversation, session?.user?.id]);
 
+	const partnerPhotoUrl = useMemo(() => {
+		if (!conversation) return null;
+		const isUser1 = conversation.user1Id === session?.user?.id;
+		return isUser1
+			? conversation.profile2?.photoUrl
+			: conversation.profile1?.photoUrl;
+	}, [conversation, session?.user?.id]);
+
+	const partnerId = useMemo(() => {
+		if (!conversation) return "";
+		const isUser1 = conversation.user1Id === session?.user?.id;
+		return isUser1
+			? conversation.profile2?.userId
+			: conversation.profile1?.userId;
+	}, [conversation, session?.user?.id]);
+
 	const expiresIn = formatTimeUntilExpiry(conversation?.timeUntilExpiry);
 
 	const handleSend = useCallback(async () => {
 		if (!inputValue.trim()) {
 			return;
 		}
+		// Arrêter le typing avant d'envoyer
+		if (lastTypingSentRef.current) {
+			sendTypingStop();
+			lastTypingSentRef.current = false;
+		}
+		if (typingTimeoutRef.current) {
+			clearTimeout(typingTimeoutRef.current);
+			typingTimeoutRef.current = null;
+		}
+
 		try {
 			setIsSending(true);
 			await sendMessage({ content: inputValue.trim() });
@@ -90,7 +153,53 @@ export default function ConversationScreen() {
 		} finally {
 			setIsSending(false);
 		}
-	}, [inputValue, markRead, sendMessage]);
+	}, [inputValue, markRead, sendMessage, sendTypingStop]);
+
+	const handleInputChange = useCallback(
+		(text: string) => {
+			setInputValue(text);
+
+			if (text.trim().length > 0) {
+				if (!lastTypingSentRef.current) {
+					sendTypingStart();
+					lastTypingSentRef.current = true;
+				}
+
+				if (typingTimeoutRef.current) {
+					clearTimeout(typingTimeoutRef.current);
+				}
+
+				typingTimeoutRef.current = setTimeout(() => {
+					if (lastTypingSentRef.current) {
+						sendTypingStop();
+						lastTypingSentRef.current = false;
+					}
+				}, 3000);
+			} else {
+				if (lastTypingSentRef.current) {
+					sendTypingStop();
+					lastTypingSentRef.current = false;
+				}
+				if (typingTimeoutRef.current) {
+					clearTimeout(typingTimeoutRef.current);
+					typingTimeoutRef.current = null;
+				}
+			}
+		},
+		[sendTypingStart, sendTypingStop]
+	);
+
+	useEffect(() => {
+		return () => {
+			if (typingTimeoutRef.current) {
+				clearTimeout(typingTimeoutRef.current);
+			}
+			if (lastTypingSentRef.current) {
+				sendTypingStop();
+			}
+		};
+	}, [sendTypingStop]);
+
 	const disabledInput =
 		!conversation?.isActiveConversation || conversation.status !== "active";
 
@@ -111,204 +220,143 @@ export default function ConversationScreen() {
 			<KeyboardAvoidingView
 				style={{ flex: 1 }}
 				behavior={Platform.OS === "ios" ? "padding" : undefined}
-				keyboardVerticalOffset={Platform.OS === "ios" ? 24 : 0}
 			>
-				<View className="flex-1">
+				<View
+					className="flex-1"
+					style={{
+						paddingBottom:
+							Platform.OS === "android" && keyboardHeight > 0 ? keyboardHeight : 0,
+					}}
+				>
 					<ChatHeader
 						name={partnerName}
 						expiresIn={expiresIn}
 						onBack={router.back}
 						isActive={conversation?.status === "active"}
+						photoUrl={partnerPhotoUrl}
+						partnerId={partnerId}
 					/>
 					{isConversationLoading || areMessagesLoading ? (
 						<View className="flex-1 items-center justify-center">
 							<ActivityIndicator />
 						</View>
 					) : (
-						<FlatList
-							ref={flatListRef}
-							contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
-							data={messages}
-							renderItem={({ item }) => (
-								<MessageBubble
-									message={item}
-									isOwnMessage={item.authorId === session?.user?.id}
-									theme={actualTheme}
-								/>
-							)}
-							keyExtractor={(item) => item.id}
-						/>
+						<>
+							<MessagesList
+								ref={flatListRef}
+								messages={messages}
+								userId={session?.user?.id}
+								theme={actualTheme}
+								conversationId={conversationId}
+								onInitialScrollComplete={() => {
+									isInitialLoadRef.current = false;
+								}}
+							/>
+							{isPartnerTyping && <TypingIndicator partnerName={partnerName} />}
+						</>
 					)}
+					{disabledInput && <ClosedConversationBanner />}
+					<ChatInput
+						value={inputValue}
+						onChangeText={handleInputChange}
+						onSend={handleSend}
+						disabled={disabledInput}
+						isSending={isSending}
+					/>
 				</View>
-				{disabledInput ? (
-					<View className="mx-4 mb-2 rounded-2xl border border-outline-200 bg-white/80 px-4 py-2 dark:border-white/10 dark:bg-white/10">
-						<Text className="text-xs text-typography-600 dark:text-typography-300">
-							<Trans id="chat.closed">
-								Conversation terminée. Tu peux revoir l&apos;historique mais pas écrire.
-							</Trans>
-						</Text>
-					</View>
-				) : null}
-				<ChatInput
-					value={inputValue}
-					onChangeText={setInputValue}
-					onSend={handleSend}
-					disabled={disabledInput}
-					isSending={isSending}
-				/>
 			</KeyboardAvoidingView>
 		</SafeAreaView>
 	);
 }
 
-function ChatHeader({
-	name,
-	expiresIn,
-	onBack,
-	isActive,
-}: {
-	name: string;
-	expiresIn: string | null;
-	onBack: () => void;
-	isActive?: boolean;
-}) {
-	return (
-		<View className="flex-row items-center justify-between border-b border-outline-50/80 px-4 py-3 dark:border-white/5">
-			<Pressable
-				accessibilityRole="button"
-				onPress={onBack}
-				className="rounded-full border border-outline-100/60 p-2 dark:border-white/20"
-			>
-				<ArrowLeft size={20} weight="bold" color="#7A2742" />
-			</Pressable>
-			<View className="flex-1 px-4">
-				<Text className="text-base font-heading text-center text-typography-900 dark:text-typography-white">
-					{name}
-				</Text>
-				{expiresIn ? (
-					<Text className="text-xs text-center text-typography-500 dark:text-typography-300">
-						{isActive ? (
-							<Trans id="chat.expires">Expire dans {expiresIn}</Trans>
-						) : (
-							<Trans id="chat.closed.short">Session clôturée</Trans>
-						)}
-					</Text>
-				) : null}
-			</View>
-			<View className="rounded-full bg-accentRose-100/70 p-2 dark:bg-accentRose-800/30">
-				<Sparkle size={18} color="#7A2742" weight="fill" />
-			</View>
-		</View>
-	);
+interface MessagesListProps {
+	messages: MessageResponse[];
+	userId?: string;
+	theme: "light" | "dark";
+	conversationId?: string;
+	onInitialScrollComplete?: () => void;
 }
 
-function MessageBubble({
-	message,
-	isOwnMessage,
-	theme,
-}: {
-	message: MessageResponse;
-	isOwnMessage: boolean;
-	theme: "light" | "dark";
-}) {
-	const alignment = isOwnMessage ? "items-end" : "items-start";
-	const bgClass = isOwnMessage
-		? "bg-typography-900"
-		: "bg-accentRose-100 dark:bg-accentRose-900/30";
-	const textClass = isOwnMessage
-		? "text-white"
-		: "text-typography-900 dark:text-typography-white";
-	const timestamp = format(new Date(message.createdAt), "HH:mm");
+const MessagesList = React.forwardRef<
+	FlatList<MessageResponse>,
+	MessagesListProps
+>(
+	(
+		{ messages, userId, theme, conversationId, onInitialScrollComplete },
+		ref
+	) => {
+		const hasScrolledToEndRef = React.useRef<boolean>(false);
 
-	if (message.isSystemMessage) {
+		const handleContentSizeChange = React.useCallback(() => {
+			if (
+				!hasScrolledToEndRef.current &&
+				messages.length > 0 &&
+				ref &&
+				"current" in ref &&
+				ref.current
+			) {
+				requestAnimationFrame(() => {
+					requestAnimationFrame(() => {
+						if (ref && "current" in ref && ref.current) {
+							ref.current.scrollToEnd({ animated: false });
+							hasScrolledToEndRef.current = true;
+							onInitialScrollComplete?.();
+						}
+					});
+				});
+			}
+		}, [messages.length, ref, onInitialScrollComplete]);
+
+		React.useEffect(() => {
+			hasScrolledToEndRef.current = false;
+		}, [conversationId]);
+
 		return (
-			<View className="my-2 items-center">
-				<Text className="text-xs uppercase tracking-[1px] text-typography-500 dark:text-typography-300">
-					{message.content}
-				</Text>
-			</View>
+			<FlatList
+				ref={ref}
+				contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
+				data={messages}
+				renderItem={({ item }) => (
+					<MessageBubble
+						message={item}
+						isOwnMessage={item.authorId === userId}
+						theme={theme}
+					/>
+				)}
+				keyExtractor={(item) => item.id}
+				keyboardShouldPersistTaps="handled"
+				keyboardDismissMode="on-drag"
+				showsVerticalScrollIndicator={false}
+				onContentSizeChange={handleContentSizeChange}
+			/>
 		);
 	}
+);
 
+MessagesList.displayName = "MessagesList";
+
+interface TypingIndicatorProps {
+	partnerName: string;
+}
+
+function TypingIndicator({ partnerName }: TypingIndicatorProps) {
 	return (
-		<View className={`mb-3 w-full ${alignment}`}>
-			<View className={`max-w-[80%] rounded-3xl px-4 py-3 ${bgClass}`}>
-				<Text className={`text-base ${textClass}`}>{message.content}</Text>
-			</View>
-			<Text className="mt-1 text-[11px] uppercase tracking-[1px] text-typography-500 dark:text-typography-300">
-				{timestamp}
+		<View className="mx-4 mb-2 px-4 py-2">
+			<Text className="text-sm italic text-typography-500 dark:text-typography-400">
+				<Trans id="chat.typing">{partnerName} écrit...</Trans>
 			</Text>
 		</View>
 	);
 }
 
-function ChatInput({
-	value,
-	onChangeText,
-	onSend,
-	disabled,
-	isSending,
-}: {
-	value: string;
-	onChangeText: (next: string) => void;
-	onSend: () => void;
-	disabled?: boolean;
-	isSending?: boolean;
-}) {
-	const placeholder = t({
-		id: "chat.input.placeholder",
-		message: "Écris ton message...",
-	});
-
+function ClosedConversationBanner() {
 	return (
-		<View className="border-t border-outline-50/80 px-4 py-3 dark:border-white/10">
-			<View className="flex-row items-center rounded-3xl border border-outline-100 bg-white px-4 py-2 dark:border-white/20 dark:bg-white/10">
-				<TextInput
-					value={value}
-					onChangeText={onChangeText}
-					editable={!disabled}
-					placeholder={placeholder}
-					placeholderTextColor="#9E9E9E"
-					multiline
-					className="flex-1 text-base text-typography-900 dark:text-white"
-				/>
-				<Pressable
-					disabled={disabled || !value.trim() || isSending}
-					onPress={onSend}
-					className={`ml-2 rounded-full p-2 ${
-						disabled || !value.trim()
-							? "bg-outline-50"
-							: "bg-typography-900 dark:bg-white"
-					}`}
-				>
-					{isSending ? (
-						<ActivityIndicator color="#FFFFFF" />
-					) : (
-						<PaperPlaneTilt
-							size={20}
-							color={
-								disabled || !value.trim()
-									? "#7A7A7A"
-									: "#FFFFFF"
-							}
-							weight="fill"
-						/>
-					)}
-				</Pressable>
-			</View>
+		<View className="mx-4 mb-2 rounded-2xl border border-outline-200 bg-white/80 px-4 py-2 dark:border-white/10 dark:bg-white/10">
+			<Text className="text-xs text-typography-600 dark:text-typography-300">
+				<Trans id="chat.closed">
+					Conversation terminée. Tu peux revoir l&apos;historique mais pas écrire.
+				</Trans>
+			</Text>
 		</View>
 	);
-}
-
-function formatTimeUntilExpiry(hoursLeft?: number | null) {
-	if (typeof hoursLeft !== "number") return null;
-	const hours = Math.floor(hoursLeft);
-	const minutes = Math.round((hoursLeft - hours) * 60);
-	if (hours <= 0 && minutes <= 0) {
-		return "quelques minutes";
-	}
-	if (hours === 0) {
-		return `${minutes} min`;
-	}
-	return `${hours} h ${minutes} min`;
 }

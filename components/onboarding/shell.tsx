@@ -55,7 +55,6 @@ export function OnboardingShell({
 			Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide",
 			() => {
 				setKeyboardHeight(0);
-				// Reset scroll position when keyboard closes
 				setTimeout(
 					() => {
 						scrollViewRef.current?.scrollTo({ y: 0, animated: true });

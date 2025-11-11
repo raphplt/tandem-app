@@ -38,3 +38,16 @@ export function formatBirthdateInput(
 
 	return result;
 }
+
+export function formatTimeUntilExpiry(hoursLeft?: number | null) {
+	if (typeof hoursLeft !== "number") return null;
+	const hours = Math.floor(hoursLeft);
+	const minutes = Math.max(0, Math.round((hoursLeft - hours) * 60));
+	if (hours <= 0 && minutes <= 0) {
+		return "quelques minutes";
+	}
+	if (hours === 0) {
+		return `${minutes} min`;
+	}
+	return `${hours} h ${minutes} min`;
+}

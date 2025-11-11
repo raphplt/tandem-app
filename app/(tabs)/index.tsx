@@ -6,7 +6,10 @@ import type { GradientColors, ThemeVariant } from "@/components/home/types";
 import { useAuthSession } from "@/hooks/use-auth-session";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useThemeStore } from "@/hooks/use-theme-store";
-import { useCreateConversationFromMatch } from "@/src/hooks/use-conversations";
+import {
+	useActiveConversation,
+	useCreateConversationFromMatch,
+} from "@/src/hooks/use-conversations";
 import { useDailySearchStream } from "@/src/hooks/use-daily-search-stream";
 import {
 	useAcceptMatch,
@@ -177,6 +180,12 @@ export default function HomeScreen() {
 		}
 	}, [createConversationFromMatch, dailyMatch, router]);
 
+	const { data: activeConversation } = useActiveConversation();
+	const handleContinueChat = useCallback(async () => {
+		if (!dailyMatch || !activeConversation) return;
+		router.push(`/chat/${activeConversation.id}` as never);
+	}, [dailyMatch, activeConversation, router]);
+
 	const currentUserId = session?.user?.id;
 
 	const partnerProfile = useMemo<MatchProfileSnapshot | null>(() => {
@@ -227,6 +236,7 @@ export default function HomeScreen() {
 								onAccept={handleAcceptMatch}
 								onReject={handleRejectMatch}
 								onStartChat={handleStartConversation}
+								onContinueChat={handleContinueChat}
 								isAccepting={isAccepting}
 								isRejecting={isRejecting}
 								isStartingConversation={isStartingConversation}

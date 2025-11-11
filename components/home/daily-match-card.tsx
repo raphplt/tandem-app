@@ -4,10 +4,8 @@ import { LightningIcon } from "phosphor-react-native";
 import type { ReactNode } from "react";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
 
-import type {
-	MatchProfileSnapshot,
-	MatchResponse,
-} from "@/types/match";
+import { useActiveConversation } from "@/src/hooks/use-conversations";
+import type { MatchProfileSnapshot, MatchResponse } from "@/types/match";
 
 type DailyMatchCardProps = {
 	match: MatchResponse;
@@ -15,6 +13,7 @@ type DailyMatchCardProps = {
 	onAccept: () => void;
 	onReject: () => void;
 	onStartChat: () => void;
+	onContinueChat: () => void;
 	isAccepting: boolean;
 	isRejecting: boolean;
 	isStartingConversation: boolean;
@@ -27,6 +26,7 @@ export function DailyMatchCard({
 	onAccept,
 	onReject,
 	onStartChat,
+	onContinueChat,
 	isAccepting,
 	isRejecting,
 	isStartingConversation,
@@ -50,6 +50,8 @@ export function DailyMatchCard({
 	const statusLabel = getMatchStatusLabel(match, waitingForPartner);
 	const expiresIn = formatTimeUntilExpiry(match.timeUntilExpiry);
 	const canChat = match.isAccepted || match.isMutual;
+
+	const { data: conversation } = useActiveConversation();
 
 	return (
 		<View className="rounded-3xl border border-outline-100 bg-white/95 p-6 dark:border-white/10 dark:bg-white/5">
@@ -129,11 +131,19 @@ export function DailyMatchCard({
 						</Text>
 					</View>
 				) : null}
-				{canChat ? (
+				{canChat && !conversation ? (
 					<MatchActionButton
 						label={<Trans id="daily-match.start-chat">Commencer à discuter</Trans>}
 						onPress={onStartChat}
 						loading={isStartingConversation}
+						icon={<LightningIcon size={20} color="#FFFFFF" weight="fill" />}
+					/>
+				) : conversation ? (
+					<MatchActionButton
+						label={
+							<Trans id="daily-match.continue-chat">Continuer la conversation</Trans>
+						}
+						onPress={onContinueChat}
 						icon={<LightningIcon size={20} color="#FFFFFF" weight="fill" />}
 					/>
 				) : null}

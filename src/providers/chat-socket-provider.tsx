@@ -1,5 +1,6 @@
 import { useAuthSession } from "@/hooks/use-auth-session";
 import { env } from "@/src/config/env";
+import { apiFetch } from "@/src/lib/api/client";
 import type {
 	CreateMessageDto,
 	MessageResponse,
@@ -35,6 +36,9 @@ interface ChatSocketContextValue {
 	) => Promise<MessageResponse>;
 	deleteMessage: (messageId: string) => Promise<MessageResponse>;
 	markConversationRead: (conversationId: string) => Promise<void>;
+	acknowledgeMessage: (messageId: string) => Promise<void>;
+	sendTypingStart: (conversationId: string) => void;
+	sendTypingStop: (conversationId: string) => void;
 }
 
 const ChatSocketContext = createContext<ChatSocketContextValue | undefined>(
@@ -70,6 +74,36 @@ export function ChatSocketProvider({ children }: { children: ReactNode }) {
 	const token = session?.sessionToken;
 	const socketRef = useRef<Socket | null>(null);
 	const [isConnected, setIsConnected] = useState(false);
+	// Queue d'acks en attente (pour gérer les déconnexions)
+	const pendingAcksRef = useRef<Set<string>>(new Set());
+	// Ref pour stocker la fonction d'acknowledge pour la reconnexion
+	const acknowledgeMessageViaSocketRef = useRef<
+		((messageId: string) => Promise<void>) | null
+	>(null);
+
+	// Fonction interne pour envoyer un ack via WebSocket
+	const acknowledgeMessageViaSocket = useCallback(
+		async (messageId: string) => {
+			if (!socketRef.current || !isConnected) {
+				// Si déconnecté, ajouter à la queue
+				pendingAcksRef.current.add(messageId);
+				return;
+			}
+			try {
+				socketRef.current.emit("message.delivery.ack", { messageId });
+				// Retirer de la queue si présent
+				pendingAcksRef.current.delete(messageId);
+			} catch (error) {
+				// En cas d'erreur, ajouter à la queue pour retry
+				pendingAcksRef.current.add(messageId);
+				throw error;
+			}
+		},
+		[isConnected]
+	);
+
+	// Stocker la fonction dans la ref pour l'utiliser dans handleConnect
+	acknowledgeMessageViaSocketRef.current = acknowledgeMessageViaSocket;
 
 	useEffect(() => {
 		if (!token) {
@@ -99,6 +133,20 @@ export function ChatSocketProvider({ children }: { children: ReactNode }) {
 
 		const handleConnect = () => {
 			setIsConnected(true);
+			// Rejouer les acks en attente lors de la reconnexion
+			if (
+				pendingAcksRef.current.size > 0 &&
+				acknowledgeMessageViaSocketRef.current
+			) {
+				const acksToReplay = Array.from(pendingAcksRef.current);
+				pendingAcksRef.current.clear();
+				acksToReplay.forEach((messageId) => {
+					acknowledgeMessageViaSocketRef.current?.(messageId).catch(() => {
+						// Si l'émission échoue, remettre dans la queue
+						pendingAcksRef.current.add(messageId);
+					});
+				});
+			}
 		};
 
 		const handleDisconnect = () => {
@@ -173,6 +221,56 @@ export function ChatSocketProvider({ children }: { children: ReactNode }) {
 		});
 	}, []);
 
+	// Fonction publique pour confirmer la réception d'un message
+	const acknowledgeMessage = useCallback(
+		async (messageId: string) => {
+			// Essayer d'abord via WebSocket
+			if (socketRef.current && isConnected) {
+				try {
+					await acknowledgeMessageViaSocket(messageId);
+					return;
+				} catch {
+					// Si échec, fallback sur REST
+				}
+			}
+
+			// Fallback REST si WebSocket indisponible
+			try {
+				const result = await apiFetch(`/api/v1/messages/${messageId}/acknowledge`, {
+					method: "POST",
+				});
+				if (result.error) {
+					// Si REST échoue aussi, ajouter à la queue pour retry plus tard
+					pendingAcksRef.current.add(messageId);
+					throw new Error(result.error.message as string);
+				}
+				// Retirer de la queue si présent
+				pendingAcksRef.current.delete(messageId);
+			} catch (error) {
+				// En cas d'erreur réseau, ajouter à la queue
+				pendingAcksRef.current.add(messageId);
+				throw error;
+			}
+		},
+		[isConnected, acknowledgeMessageViaSocket]
+	);
+
+	const sendTypingStart = useCallback(
+		(conversationId: string) => {
+			if (!socketRef.current || !isConnected) return;
+			socketRef.current.emit("typing.start", { conversationId });
+		},
+		[isConnected]
+	);
+
+	const sendTypingStop = useCallback(
+		(conversationId: string) => {
+			if (!socketRef.current || !isConnected) return;
+			socketRef.current.emit("typing.stop", { conversationId });
+		},
+		[isConnected]
+	);
+
 	const value = useMemo<ChatSocketContextValue>(
 		() => ({
 			socket: socketRef.current,
@@ -183,6 +281,9 @@ export function ChatSocketProvider({ children }: { children: ReactNode }) {
 			updateMessage,
 			deleteMessage,
 			markConversationRead,
+			acknowledgeMessage,
+			sendTypingStart,
+			sendTypingStop,
 		}),
 		[
 			isConnected,
@@ -192,6 +293,9 @@ export function ChatSocketProvider({ children }: { children: ReactNode }) {
 			updateMessage,
 			deleteMessage,
 			markConversationRead,
+			acknowledgeMessage,
+			sendTypingStart,
+			sendTypingStop,
 		]
 	);
 
