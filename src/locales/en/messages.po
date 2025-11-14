@@ -33,8 +33,35 @@ msgstr "French"
 msgid "tabs.home"
 msgstr "Home"
 
+msgid "tabs.messages"
+msgstr "Messages"
+
 msgid "tabs.explore"
 msgstr "Explore"
 
 msgid "tabs.settings"
 msgstr "Settings"
+
+msgid "onboarding.photos.permissionDenied"
+msgstr "Authorize access to your gallery to import a photo"
+
+msgid "onboarding.photos.removeAlert.title"
+msgstr "Remove photo"
+
+msgid "onboarding.photos.removeAlert.message"
+msgstr "Do you want to remove this photo from your profile?"
+
+msgid "onboarding.photos.removeAlert.cancel"
+msgstr "Cancel"
+
+msgid "onboarding.photos.removeAlert.delete"
+msgstr "Remove"
+
+msgid "onboarding.photos.errors.minPhotos"
+msgstr "Add at least one photo to continue"
+
+msgid "onboarding.photos.errors.waitUploads"
+msgstr "Please wait while your photos finish uploading"
+
+msgid "onboarding.photos.accessibility.continue"
+msgstr "Continue to bio"

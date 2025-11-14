@@ -12,8 +12,10 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.raphplt.wetwo",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
-      }
+							"ITSAppUsesNonExemptEncryption": false,
+							"NSPhotoLibraryUsageDescription": "Allow Wetwo to use your photo library to select profile photos.",
+							"NSPhotoLibraryAddUsageDescription": "Allow Wetwo to save photos to your library."
+						}
     },
     "android": {
       "adaptiveIcon": {

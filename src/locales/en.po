@@ -159,6 +159,11 @@ msgid "tabs.home"
 msgstr "Home"
 
 #. js-lingui-explicit-id
+#: app/(tabs)/_layout.tsx
+msgid "tabs.messages"
+msgstr "Messages"
+
+#. js-lingui-explicit-id
 #: app/(onboarding)/profile-step-5.tsx:101
 msgid "onboarding.profile.step5.importPhoto"
 msgstr "Importer une photo"

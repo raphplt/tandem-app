@@ -11,6 +11,7 @@ module.exports = {
 		"settings-screen.title": ["Paramètres"],
 		"tabs.explore": ["Explorer"],
 		"tabs.home": ["Accueil"],
+		"tabs.messages": ["Messages"],
 		"tabs.settings": ["Paramètres"],
 	},
 };

@@ -1,3 +1,4 @@
+import { t } from "@lingui/macro";
 import { Trans } from "@lingui/react/macro";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
@@ -50,7 +51,12 @@ export default function PhotosScreen() {
 		setError(null);
 		const permissions = await ImagePicker.requestMediaLibraryPermissionsAsync();
 		if (!permissions.granted) {
-			setError("Autorise l'accès à ta galerie pour importer une photo");
+			setError(
+				t({
+					id: "onboarding.photos.permissionDenied",
+					message: "Autorise l'accès à ta galerie pour importer une photo",
+				})
+			);
 			return;
 		}
 
@@ -77,12 +83,27 @@ export default function PhotosScreen() {
 	const handleRemove = useCallback(
 		(photoId: string) => {
 			Alert.alert(
-				"Supprimer la photo",
-				"Veux-tu retirer cette photo de ton profil ?",
+				t({
+					id: "onboarding.photos.removeAlert.title",
+					message: "Supprimer la photo",
+				}),
+				t({
+					id: "onboarding.photos.removeAlert.message",
+					message: "Veux-tu retirer cette photo de ton profil ?",
+				}),
 				[
-					{ text: "Annuler", style: "cancel" },
 					{
-						text: "Supprimer",
+						text: t({
+							id: "onboarding.photos.removeAlert.cancel",
+							message: "Annuler",
+						}),
+						style: "cancel",
+					},
+					{
+						text: t({
+							id: "onboarding.photos.removeAlert.delete",
+							message: "Supprimer",
+						}),
 						style: "destructive",
 						onPress: () => removePhoto(photoId),
 					},
@@ -106,13 +127,23 @@ export default function PhotosScreen() {
 
 		if (uploadedPhotos.length === 0) {
 			setLoading(false);
-			setError("Ajoute au moins une photo pour poursuivre");
+			setError(
+				t({
+					id: "onboarding.photos.errors.minPhotos",
+					message: "Ajoute au moins une photo pour poursuivre",
+				})
+			);
 			return;
 		}
 
 		if (hasUploading) {
 			setLoading(false);
-			setError("Patiente pendant l’import de tes photos");
+			setError(
+				t({
+					id: "onboarding.photos.errors.waitUploads",
+					message: "Patiente pendant l’import de tes photos",
+				})
+			);
 			return;
 		}
 
@@ -143,7 +174,10 @@ export default function PhotosScreen() {
 					onPress={handleContinue}
 					disabled={loading}
 					loading={loading}
-					accessibilityLabel="Continuer vers la bio"
+					accessibilityLabel={t({
+						id: "onboarding.photos.accessibility.continue",
+						message: "Continuer vers la bio",
+					})}
 				/>
 			}
 		>

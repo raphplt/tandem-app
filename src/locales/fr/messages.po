@@ -33,8 +33,35 @@ msgstr "Français"
 msgid "tabs.home"
 msgstr "Accueil"
 
+msgid "tabs.messages"
+msgstr "Messages"
+
 msgid "tabs.explore"
 msgstr "Explorer"
 
 msgid "tabs.settings"
 msgstr "Paramètres"
+
+msgid "onboarding.photos.permissionDenied"
+msgstr "Autorise l'accès à ta galerie pour importer une photo"
+
+msgid "onboarding.photos.removeAlert.title"
+msgstr "Supprimer la photo"
+
+msgid "onboarding.photos.removeAlert.message"
+msgstr "Veux-tu retirer cette photo de ton profil ?"
+
+msgid "onboarding.photos.removeAlert.cancel"
+msgstr "Annuler"
+
+msgid "onboarding.photos.removeAlert.delete"
+msgstr "Supprimer"
+
+msgid "onboarding.photos.errors.minPhotos"
+msgstr "Ajoute au moins une photo pour poursuivre"
+
+msgid "onboarding.photos.errors.waitUploads"
+msgstr "Patiente pendant l’import de tes photos"
+
+msgid "onboarding.photos.accessibility.continue"
+msgstr "Continuer vers la bio"
